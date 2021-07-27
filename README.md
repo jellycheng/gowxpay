@@ -13,6 +13,9 @@ V3文档：
 ## 下载与更新依赖
 ```
 go get -u github.com/jellycheng/gowxpay
+或者
+GO111MODULE=on GOPROXY=https://goproxy.cn/,direct go get -u github.com/jellycheng/gowxpay
+
 ```
 
 ## demo

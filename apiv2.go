@@ -25,7 +25,7 @@ func OrderQueryV2(c PayClient, params MapParams) (MapParams, error) {
 // 退款
 func RefundV2(c PayClient, params MapParams) (MapParams, error) {
 	var url = PayDomainUrl + "/secapi/pay/refund"
-	xmlStr, err := c.Pos4Cert(url, params)
+	xmlStr, err := c.Post4Cert(url, params)
 	if err != nil {
 		return nil, err
 	}

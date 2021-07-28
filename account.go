@@ -16,6 +16,10 @@ func (a *Account) SetIsSandbox(isSandbox bool) *Account {
 	return a
 }
 
+func (a *Account) GetIsSandbox() bool {
+	return a.isSandbox
+}
+
 // 设置证书
 func (a *Account) SetCertData(certPath string) (*Account,error) {
 	certData, err := ioutil.ReadFile(certPath)

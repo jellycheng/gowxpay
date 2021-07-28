@@ -1,12 +1,17 @@
 package gowxpay
 
 import (
+	"bufio"
 	"crypto/tls"
 	"encoding/pem"
 	"encoding/xml"
 	"errors"
+	"github.com/jellycheng/gosupport"
+	"github.com/jellycheng/gosupport/ini"
 	"golang.org/x/crypto/pkcs12"
+	"io"
 	"io/ioutil"
+	"regexp"
 	"strings"
 )
 
@@ -51,7 +56,7 @@ func XmlToMap(xmlStr string) MapParams {
 			key = token.Name.Local
 		case xml.CharData:
 			//处理标签内容
-			content := string([]byte(token))
+			content := string(token)
 			value = content
 		}
 		if key != "xml" {
@@ -62,4 +67,48 @@ func XmlToMap(xmlStr string) MapParams {
 	}
 
 	return params
+}
+
+func SimpleIni2Map(fileName string) map[string]string {
+	ret := map[string]string{}
+	if gosupport.FileExists(fileName) {
+		con,_ := gosupport.FileGetContents(fileName)
+		reader := bufio.NewReader(strings.NewReader(con))
+		for {
+			l, err := reader.ReadString('\n')
+			if err!=nil && err!=io.EOF {
+				break
+			}
+			line := strings.TrimSpace(l)
+			if len(line) == 0 {
+				if err==io.EOF {
+					break
+				} else {
+					continue
+				}
+			}
+			if IsCommentLine(line) {
+				continue
+			}
+			line = string(ini.GetCleanComment([]byte(line)))
+			i := strings.IndexAny(line, "=")
+			if i == -1 {
+				continue
+			}
+			value := strings.TrimSpace(string(ini.GetCleanComment([]byte(line[i+1 : len(line)]))))
+			ret[strings.TrimSpace(line[0:i])] = value
+		}
+	}
+
+	return ret
+}
+
+// 判断是否注释字符串，以 #;开头的字符就算
+func IsCommentLine(str string) bool {
+	isMatch,_ := regexp.MatchString("^\\s*[#;]+", str)
+	if isMatch {
+		return true
+	} else {
+		return false
+	}
 }

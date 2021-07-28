@@ -1,0 +1,18 @@
+
+# 小程序appid
+appid=
+
+# 支付商户号
+mchid=
+
+# 支付api v2密钥
+apikey=
+
+# 支付api v3密钥
+apikeyv3=
+
+# 用户openid
+openid=
+
+# 通知地址、支付回调地址
+notify_url=http://pay.xxx.com/notify

@@ -32,22 +32,25 @@ func TestPkcs12ToPem(t *testing.T) {
 
 //统一下单： go test -run="TestUnifiedOrder"
 func TestUnifiedOrder(t *testing.T) {
-	appid := "appid"
-	mchid := "mch id"
-	apikey := ""
-	openid := "oCMgd5HSUIbRCdne9OlIcoTOudXs"
+	payCfg := SimpleIni2Map("cjs.ini")
+	//fmt.Println(payCfg)
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"]
+	apikey := payCfg["apikey"]
+	openid := payCfg["openid"]
+	notifyUrl := payCfg["notify_url"]
 	client := NewPayClient(NewAccount(appid, mchid, apikey))
 	params := make(MapParams)
 	params.SetString("body", "购买商品").
 		SetString("out_trade_no", "orderID" + gosupport.GetRandString(6)).
 		SetInt64("total_fee", 1).
 		SetString("spbill_create_ip", "127.0.0.1").
-		SetString("notify_url", "http://pay.nfangbian.com/notify").
-		SetString("trade_type", "JSAPI").SetString("openid", openid)
+		SetString("notify_url", notifyUrl).
+		SetString("trade_type", TradeTypeJSAPI).SetString("openid", openid)
 	if res, err := UnifiedOrderV2(*client, params);err == nil{//统一下单
 		fmt.Println(res)
 		var retWxRequestPayment = make(map[string]string)
-		if tradeType,ok:=res["trade_type"];ok && tradeType == "JSAPI" { //小程序支付
+		if tradeType,ok:=res["trade_type"];ok && tradeType == TradeTypeJSAPI { //小程序支付
 			retWxRequestPayment["appId"] = appid
 			retWxRequestPayment["package"] = "prepay_id=" + res["prepay_id"]
 			retWxRequestPayment["timeStamp"] =  strconv.FormatInt(gosupport.Time(), 10)

@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// 封装支付api v2版本的请求
 type PayClient struct {
 	account              *Account //支付商户号配置
 	signType             string   //签名类型
@@ -90,7 +91,7 @@ func (c *PayClient) Post4NotCert(url string, params MapParams) (string, error) {
 }
 
 // https need cert post
-func (c *PayClient) Pos4Cert(url string, params MapParams) (string, error) {
+func (c *PayClient) Post4Cert(url string, params MapParams) (string, error) {
 	if c.account.certData == nil {
 		return "", errors.New("证书数据为空")
 	}

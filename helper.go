@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/jellycheng/gosupport"
 	"github.com/jellycheng/gosupport/ini"
 	"golang.org/x/crypto/pkcs12"
@@ -112,3 +113,26 @@ func IsCommentLine(str string) bool {
 		return false
 	}
 }
+
+func PinAuthorizationHeaderVal(mchid string, nonceStr string, timestamp int64, serialNo string, sign string) string {
+	str := fmt.Sprintf(`WECHATPAY2-SHA256-RSA2048 mchid="%s",nonce_str="%s",timestamp="%d",serial_no="%s",signature="%s"`,
+		mchid, nonceStr, timestamp, serialNo, sign)
+
+	return str
+}
+
+// 拼接请求签名原文格式: HTTP请求方法\n支付接口URL Path\n请求时间戳\n请求随机串\n请求报文主体\n
+func PinReqMessage(method string, urlPath string, timestamp int64, nonce string, body string) string {
+	// 签名原文格式
+	str := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n",
+		method, urlPath, timestamp, nonce, body)
+
+	return str
+}
+
+// 拼接响应客户端签名串，prepayId为预单号
+func PinRespMessage(appid string, timeStamp int64, nonceStr string, prepayId string) string {
+	str := fmt.Sprintf("%s\n%d\n%s\n%s\n", appid, timeStamp, nonceStr, prepayId)
+	return str
+}
+

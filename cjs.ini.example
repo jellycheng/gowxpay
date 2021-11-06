@@ -11,6 +11,9 @@ apikey=
 # 支付api v3密钥
 apikeyv3=
 
+# 证书序列号,支付api v3版本才需要配置
+serialno=
+
 # 用户openid
 openid=
 

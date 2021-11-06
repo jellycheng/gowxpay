@@ -15,3 +15,8 @@ cjs_test.go
 cjs.ini
 go.sum
 .DS_Store
+
+apiclient_cert.p12
+apiclient_key.pem
+apiclient_cert.pem
+apiclient_pub.pem

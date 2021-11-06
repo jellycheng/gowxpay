@@ -4,8 +4,8 @@ package gowxpay
 
 // 统一下单
 func UnifiedOrderV2(c PayClient, params MapParams) (MapParams, error) {
-	var url = PayDomainUrl + "/pay/unifiedorder"
-	xmlStr, err := c.Post4NotCert(url, params)
+	var urlStr = PayDomainUrl + "/pay/unifiedorder"
+	xmlStr, err := c.Post4NotCert(urlStr, params)
 	if err != nil {
 		return nil, err
 	}
@@ -14,8 +14,8 @@ func UnifiedOrderV2(c PayClient, params MapParams) (MapParams, error) {
 
 //订单查询
 func OrderQueryV2(c PayClient, params MapParams) (MapParams, error) {
-	var url = PayDomainUrl + "/pay/orderquery"
-	xmlStr, err := c.Post4NotCert(url, params)
+	var urlStr = PayDomainUrl + "/pay/orderquery"
+	xmlStr, err := c.Post4NotCert(urlStr, params)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,8 @@ func OrderQueryV2(c PayClient, params MapParams) (MapParams, error) {
 
 // 退款
 func RefundV2(c PayClient, params MapParams) (MapParams, error) {
-	var url = PayDomainUrl + "/secapi/pay/refund"
-	xmlStr, err := c.Post4Cert(url, params)
+	var urlStr = PayDomainUrl + "/secapi/pay/refund"
+	xmlStr, err := c.Post4Cert(urlStr, params)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +34,8 @@ func RefundV2(c PayClient, params MapParams) (MapParams, error) {
 
 // 退款查询
 func RefundQueryV2(c PayClient, params MapParams) (MapParams, error) {
-	var url string = PayDomainUrl + "/pay/refundquery"
-	xmlStr, err := c.Post4NotCert(url, params)
+	var urlStr = PayDomainUrl + "/pay/refundquery"
+	xmlStr, err := c.Post4NotCert(urlStr, params)
 	if err != nil {
 		return nil, err
 	}

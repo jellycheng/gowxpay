@@ -2,17 +2,19 @@
 ```
 封装微信支付api sdk
 
-支付v2和v3版本文档： 
-    https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/api.shtml
 V2文档：
     https://pay.weixin.qq.com/wiki/doc/api/index.html
+
 V3文档：
     https://pay.weixin.qq.com/wiki/doc/apiv3/index.shtml
-术语：
+    https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/index.shtml
+
+名词表：
     https://pay.weixin.qq.com/wiki/doc/apiv3_partner/terms_definition/chapter1_1.shtml
 
 ```
-[https://pay.weixin.qq.com/](https://pay.weixin.qq.com/)
+[微信支付商户平台：https://pay.weixin.qq.com/](https://pay.weixin.qq.com/) <br>
+[https://wechatpay-api.gitbook.io/wechatpay-api-v3/](https://wechatpay-api.gitbook.io/wechatpay-api-v3/) <br>
 
 ## 下载与更新依赖
 ```
@@ -32,10 +34,19 @@ v3版本：
     使用JSON作为数据交互的格式，不再使用XML
     使用基于非对称密钥的SHA256-RSA的数字签名算法，不再使用MD5或HMAC-SHA256
     不再要求HTTPS客户端证书
-    使用AES-256-GCM，对回调中的关键信息进行加密保护
+    使用AES-256-GCM加密，对回调中的关键信息进行加密保护
     仅支持UTF-8字符编码
 
 ```
+规则差异   | V2    | V3   | 备注
+------------|-----------|-----------|-----------
+参数格式| XML |  JSON | 
+提交方式|POST | POST、GET、PUT、PATCH、DELETE  | 
+回调加密|无需加密 | AES-256-GCM加密  | 
+敏感加密| RSA加密|  RSA加密 |     
+编码方式|UTF-8 | UTF-8  | 
+签名方式| MD5或HMAC-SHA256| 非对称密钥SHA256-RSA  | 
+
 
 ## 注意事项
 ```
@@ -46,14 +57,20 @@ v3版本：
 3. 微信平台接到Native支付请求时，会回调用在微信支付后台配置的支付回调链接，用于传递订单信息
     其它方式的通知地址通过接口入参notify_url设置（支持http、https协议）
 
-JSAPI支付：公众号中拉起支付、扫pc网站二维码支付、
-Native支付: 用户扫码支付
+JSAPI支付：公众号中拉起支付、扫pc网站二维码支付，需要在商户后台配置JSAPI支付授权目录（最多可添加5个域名地址）
+Native支付: 用户扫码支付，即生成二维码提供用户扫码支付，需要在商户后台配置Native支付回调链接
 APP支付： 使用ios、android app发起支付
 H5支付：在移动浏览器中的支付
 付款码支付：扫用户的"付款码"支付，适用于商超、便利店、餐饮等系统
 微信刷脸支付： 用户刷脸支付
 小程序支付：申请入口在小程序后台申请支付（https://mp.weixin.qq.com/），关联支付商户号
         小程序后台-》功能-》微信支付
+
+```
+
+## 密钥相关
+```
+生成公钥： openssl x509 -in apiclient_cert.pem -pubkey -noout > apiclient_pub.pem
 
 ```
 

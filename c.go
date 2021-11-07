@@ -1,5 +1,7 @@
 package gowxpay
 
+import "time"
+
 const (
 	Fail    = "FAIL"
 	Success = "SUCCESS"
@@ -16,4 +18,21 @@ const (
 	TradeTypeMWEB     = "MWEB"     //H5支付,微信之外的浏览器中支付
 	TradeTypeMICROPAY = "MICROPAY" //付款码支付，付款码支付有单独的支付接口，所以接口不需要上传，该字段在对账单中会出现
 
+	PaySdkVersion = "1.0.0"
+	PaySdkName = "paysdk"
+)
+
+// 微信支付应答报文头相关常量
+const (
+	RequestID          = "Request-Id"          // 微信支付回包请求ID
+	WechatPayTimestamp = "Wechatpay-Timestamp" // 微信支付回包时间戳
+	WechatPayNonce     = "Wechatpay-Nonce"     // 微信支付回包随机字符串
+	WechatPaySerial    = "Wechatpay-Serial"    // 微信支付回包平台序列号
+	WechatPaySignature = "Wechatpay-Signature" // 微信支付回包签名信息
+)
+
+// 时间相关常量
+const (
+	FiveMinute     = 5 * 60           // 回包校验最长时间（秒）
+	DefaultTimeout = 30 * time.Second // HTTP请求默认超时时间
 )

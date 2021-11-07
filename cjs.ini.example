@@ -9,10 +9,13 @@ mchid=
 apikey=
 
 # 支付api v3密钥
-apikeyv3=
+apiv3key=
 
 # 证书序列号,支付api v3版本才需要配置
 serialno=
+
+# apiclient_key.pem文件路径
+apiclient_key_pem_file=
 
 # 用户openid
 openid=

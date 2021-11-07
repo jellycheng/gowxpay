@@ -66,7 +66,7 @@ func LoadPublicKey(publicKeyStr string) (publicKey *rsa.PublicKey, err error) {
 	return publicKey, nil
 }
 
-// 通过证书的文件路径加载证书
+// 通过证书的文件路径加载证书: apiclient_cert.pem，内容格式如：-----BEGIN CERTIFICATE-----
 func LoadCertificateWithPath(path string) (certificate *x509.Certificate, err error) {
 	certificateBytes, err := ioutil.ReadFile(path)
 	if err != nil {

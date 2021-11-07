@@ -40,3 +40,11 @@ func NewAccount(appID string, mchID string, apiKey string) *Account {
 	}
 }
 
+
+type AccountV3 struct {
+	AppID    string // 小程序等appid
+	MchID    string // 商户号
+	SerialNo string // 商户api证书序列号
+	ApiClientKeyPemFile string
+	ApiV3Key string // api v3 key
+}

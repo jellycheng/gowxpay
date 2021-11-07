@@ -136,3 +136,8 @@ func PinRespMessage(appid string, timeStamp int64, nonceStr string, prepayId str
 	return str
 }
 
+// 打印分割线
+func SplitLine(s string, l int)  {
+	sl := strings.Repeat(s, l)
+	fmt.Println(sl)
+}

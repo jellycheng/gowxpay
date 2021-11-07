@@ -20,3 +20,4 @@ apiclient_cert.p12
 apiclient_key.pem
 apiclient_cert.pem
 apiclient_pub.pem
+*.pem

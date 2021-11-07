@@ -2,6 +2,30 @@ package gowxpay
 
 import "time"
 
+type PayV3Err struct {
+	Code string `json:"code"`
+	Message string `json:"message"`
+}
+
+// 微信支付API v3 版本错误结构
+type APIErrDetail struct {
+	StatusCode int         // 应答报文的 HTTP 状态码
+	Header     map[string]string // 应答报文的 Header 信息
+	Body       string      // 应答报文的 Body 原文
+	Code       string      `json:"code"`             // 应答报文的 Body 解析后的错误码信息，仅不符合预期/发生系统错误时存在
+	Message    string      `json:"message"`          // 应答报文的 Body 解析后的文字说明信息，仅不符合预期/发生系统错误时存在
+	Detail     interface{} `json:"detail,omitempty"` // 应答报文的 Body 解析后的详细信息，仅不符合预期/发生系统错误时存在
+}
+
+// 微信支付接口响应的请求头
+type WechatPayHeader struct {
+	RequestID string
+	Serial    string
+	Signature string
+	Nonce     string
+	Timestamp int64
+}
+
 // 支付者信息，入参
 type PayerReqV3Dto struct {
 	// 用户在商户appid下的唯一标识。

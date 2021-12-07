@@ -17,6 +17,9 @@ serialno=
 # apiclient_key.pem文件路径
 apiclient_key_pem_file=
 
+# apiclient_cert.pem文件路径
+apiclient_cert_pem_file=
+
 # 用户openid
 openid=
 

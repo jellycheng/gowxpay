@@ -146,3 +146,79 @@ func CheckWechatPayHeader(args WechatPayHeader) error {
 	}
 	return nil
 }
+
+// 微信支付订单号查询
+func QueryOrder4TransactionId(q QueryOrderReqDto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = fmt.Sprintf(PayDomainUrl + "/v3/pay/transactions/id/%s?mchid=%s", *q.TransactionId, *q.Mchid)
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	reqStr := PinReqMessage(http.MethodGet, urlPath, timestamp, nonce, "")
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).Get()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+
+	// 返回结果
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}
+
+// 商户订单号查询
+func QueryOrder4OutTradeNo(q QueryOrderReqDto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = fmt.Sprintf(PayDomainUrl + "/v3/pay/transactions/out-trade-no/%s?mchid=%s", *q.OutTradeNo, *q.Mchid)
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	reqStr := PinReqMessage(http.MethodGet, urlPath, timestamp, nonce, "")
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).Get()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+
+	// 返回结果
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}

@@ -45,6 +45,7 @@ type AccountV3 struct {
 	AppID    string // 小程序等appid
 	MchID    string // 商户号
 	SerialNo string // 商户api证书序列号
-	ApiClientKeyPemFile string
+	ApiClientKeyPemFile string // apiclient_key.pem文件
+	ApiClientKeyCertFile string // apiclient_cert.pem文件
 	ApiV3Key string // api v3 key
 }

@@ -38,20 +38,21 @@ func TestPinAuthorizationHeaderVal(t *testing.T) {
 
 }
 
-//go test -run="TestJsapiPrepayV3"
+// 下单： go test -run="TestJsapiPrepayV3"
 func TestJsapiPrepayV3(t *testing.T) {
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
 	mchid := payCfg["mchid"] // 支付商户号
 	serialNo := payCfg["serialno"] // 证书序列号
 	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiClientKeyCertFile := payCfg["apiclient_cert_pem_file"]
 	openid := payCfg["openid"]
-	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile}
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiClientKeyCertFile}
 	prepayDto := PrepayReqV3Dto{Appid: String(appid),
 								Mchid: String(mchid),
 								Description: String("购买cjs商品"),
 								OutTradeNo: String("2021"+gosupport.GetRandString(10)), // 订单号
-								NotifyUrl: String("https://www.weixin.qq.com/wxpay/pay.php"),
+								NotifyUrl: String("https://api.5ecms.com/baiyi/callback/wxpay"),
 								Amount: &AmountReqV3Dto{ // 订单金额
 									Currency: String(FeeTypeCNY),
 									Total:    Int64(100),
@@ -61,6 +62,7 @@ func TestJsapiPrepayV3(t *testing.T) {
 								},
 				}
 	if res, allHeaders, err := JsapiPrepayV3(prepayDto, accountV3Obj);err == nil {
+		fmt.Println("单号：", *prepayDto.OutTradeNo)
 		fmt.Println(gosupport.ToJson(allHeaders))
 		fmt.Println(res)
 
@@ -68,18 +70,23 @@ func TestJsapiPrepayV3(t *testing.T) {
 		json.Unmarshal([]byte(res), &prepayRespDtoObj)
 		fmt.Println(*prepayRespDtoObj.PrepayId)
 		// 验证签名
-		//if er:= CheckSignV3(allHeaders, []byte(res));er==nil{
-		//	fmt.Println("签名通过")
-		//} else {
-		//	fmt.Println(er.Error())
-		//}
+		if payCertificate, err := LoadCertificateWithPath(accountV3Obj.ApiClientKeyCertFile);err == nil {
+			if er:= CheckSignV3(allHeaders, []byte(res), payCertificate);er==nil{
+				fmt.Println("签名通过")
+			} else {
+				fmt.Println("签名失败：",er.Error())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+
 	} else {
 		fmt.Println(err.Error())
 	}
 
 }
 
-//go test -run="TestGetCertificatesV3"
+// go test -run="TestGetCertificatesV3"
 func TestGetCertificatesV3(t *testing.T) {
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
@@ -110,7 +117,7 @@ func TestGetCertificatesV3(t *testing.T) {
 				if er:= CheckSignV3(allHeaders, []byte(res), certificateObj);er==nil{
 					fmt.Println("签名通过")
 				} else {
-					fmt.Println(er.Error())
+					fmt.Println("签名失败：",er.Error())
 				}
 			}
 		} else {
@@ -122,7 +129,7 @@ func TestGetCertificatesV3(t *testing.T) {
 	}
 }
 
-//go test -run="TestNotifiesReturnV3"
+// 响应通知结果： go test -run="TestNotifiesReturnV3"
 func TestNotifiesReturnV3(t *testing.T)  {
 	notify := NotifiesReturnV3{}
 	fmt.Println(notify.OK())

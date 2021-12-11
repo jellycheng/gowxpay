@@ -20,6 +20,8 @@ const (
 
 	PaySdkVersion = "1.0.0"
 	PaySdkName = "paysdk"
+
+	SignTypeRSA = "RSA"
 )
 
 // 微信支付应答报文头相关常量

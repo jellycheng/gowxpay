@@ -146,3 +146,26 @@ func TestGetCertificateSerialNumber(t *testing.T) {
 	}
 
 }
+
+// go test -run="TestCloseOrder"
+func TestCloseOrder(t *testing.T) {
+	// 关单
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
+	reqDto := CloseOrderReqDto{
+		OutTradeNo: String("OutTradeNo_example123"),
+		Mchid:      String(mchid),
+	}
+	if isOk, allHeaders, err := CloseOrder(reqDto, accountV3Obj);err == nil{
+		fmt.Println(allHeaders)
+		fmt.Println("关单结果：", isOk)
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}

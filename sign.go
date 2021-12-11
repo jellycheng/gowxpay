@@ -48,7 +48,7 @@ func CheckSignV3(allHeaders map[string]string, body []byte, certificate *x509.Ce
 	if err != nil {
 		return fmt.Errorf("verify failed: signature not base64 encoded")
 	}
-	//certificate,_ := LoadCertificateWithPath("./aaa.pem")
+	//certificate,_ := LoadCertificateWithPath("./apiclient_cert.pem")
 	hashed := sha256.Sum256([]byte(message))
 	err = rsa.VerifyPKCS1v15(certificate.PublicKey.(*rsa.PublicKey), crypto.SHA256, hashed[:], sigBytes)
 	if err != nil {

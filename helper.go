@@ -34,7 +34,7 @@ func Pkcs12ToPem(p12 []byte, password string) (tls.Certificate,error) {
 	return cert,err
 }
 
-//获取证书内容
+// GetCertData 获取证书内容
 func GetCertData(certPath string) ([]byte, error){
 	certData, err := ioutil.ReadFile(certPath)
 	if err != nil {
@@ -104,7 +104,7 @@ func SimpleIni2Map(fileName string) map[string]string {
 	return ret
 }
 
-// 判断是否注释字符串，以 #;开头的字符就算
+// IsCommentLine 判断是否注释字符串，以 #;开头的字符就算
 func IsCommentLine(str string) bool {
 	isMatch,_ := regexp.MatchString("^\\s*[#;]+", str)
 	if isMatch {
@@ -121,7 +121,7 @@ func PinAuthorizationHeaderVal(mchid string, nonceStr string, timestamp int64, s
 	return str
 }
 
-// 拼接请求签名原文格式: HTTP请求方法\n支付接口URL Path\n请求时间戳\n请求随机串\n请求报文主体\n
+// PinReqMessage 拼接请求签名原文格式: HTTP请求方法\n支付接口URL Path\n请求时间戳\n请求随机串\n请求报文主体\n
 func PinReqMessage(method string, urlPath string, timestamp int64, nonce string, body string) string {
 	// 签名原文格式
 	str := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n",
@@ -130,13 +130,13 @@ func PinReqMessage(method string, urlPath string, timestamp int64, nonce string,
 	return str
 }
 
-// 拼接响应客户端签名串，prepayId为预单号
+// PinRespMessage 拼接响应客户端签名串，prepayId为预单号,如 prepay_id=xxx
 func PinRespMessage(appid string, timeStamp int64, nonceStr string, prepayId string) string {
 	str := fmt.Sprintf("%s\n%d\n%s\n%s\n", appid, timeStamp, nonceStr, prepayId)
 	return str
 }
 
-// 打印分割线
+// SplitLine 打印分割线
 func SplitLine(s string, l int)  {
 	sl := strings.Repeat(s, l)
 	fmt.Println(sl)

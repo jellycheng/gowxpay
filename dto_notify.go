@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// 通知资源数据：微信支付通知请求中的内容
+// EncryptedResourceDto 通知资源数据：微信支付通知请求中的内容
 type EncryptedResourceDto struct {
 	Algorithm      string `json:"algorithm"` //加密算法类型
 	Ciphertext     string `json:"ciphertext"` //数据密文
@@ -14,7 +14,7 @@ type EncryptedResourceDto struct {
 	Plaintext      string // 解密后内容
 }
 
-// 微信支付通知结果结构
+// NotifyDto 微信支付通知结果结构
 type NotifyDto struct {
 	ID           string             `json:"id"` //通知ID
 	CreateTime   *time.Time         `json:"create_time"` //通知创建时间

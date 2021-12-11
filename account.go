@@ -2,7 +2,7 @@ package gowxpay
 
 import "io/ioutil"
 
-//支付商户号，appid和mch_id两者之间需要具备绑定关系，直连模式：appid和mch_id之间的绑定关系可以是多对多
+// Account 支付商户号，appid和mch_id两者之间需要具备绑定关系，直连模式：appid和mch_id之间的绑定关系可以是多对多
 type Account struct {
 	appID     string //小程序appid
 	mchID     string //支付商户号
@@ -20,7 +20,7 @@ func (a *Account) GetIsSandbox() bool {
 	return a.isSandbox
 }
 
-// 设置证书
+// SetCertData 设置证书
 func (a *Account) SetCertData(certPath string) (*Account,error) {
 	certData, err := ioutil.ReadFile(certPath)
 	if err != nil {
@@ -30,7 +30,13 @@ func (a *Account) SetCertData(certPath string) (*Account,error) {
 	return a,nil
 }
 
-//创建微信支付账号，支付商户号
+// EditCertData 修改证书内容
+func (a *Account) EditCertData(certCon []byte) *Account {
+	a.certData = certCon
+	return a
+}
+
+// NewAccount 创建微信支付账号，支付商户号
 func NewAccount(appID string, mchID string, apiKey string) *Account {
 	return &Account{
 		appID:     appID,
@@ -43,8 +49,8 @@ func NewAccount(appID string, mchID string, apiKey string) *Account {
 
 type AccountV3 struct {
 	AppID    string // 小程序等appid
-	MchID    string // 商户号
-	SerialNo string // 商户api证书序列号
+	MchID    string // 支付商户号
+	SerialNo string // 支付商户api证书序列号
 	ApiClientKeyPemFile string // apiclient_key.pem文件
 	ApiClientKeyCertFile string // apiclient_cert.pem文件
 	ApiV3Key string // api v3 key

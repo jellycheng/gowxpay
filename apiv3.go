@@ -150,7 +150,7 @@ func CheckWechatPayHeader(args WechatPayHeader) error {
 // QueryOrder4TransactionId 微信支付订单号查询
 func QueryOrder4TransactionId(q QueryOrderReqDto, acc AccountV3) (string, map[string]string, error) {
 	var (
-		urlStr = fmt.Sprintf(PayDomainUrl + "/v3/pay/transactions/id/%s?mchid=%s", *q.TransactionId, *q.Mchid)
+		urlStr = fmt.Sprintf("%s/v3/pay/transactions/id/%s?mchid=%s", PayDomainUrl, *q.TransactionId, *q.Mchid)
 		respContent = ""
 		allHeaders = map[string]string{}
 	)
@@ -188,7 +188,7 @@ func QueryOrder4TransactionId(q QueryOrderReqDto, acc AccountV3) (string, map[st
 // QueryOrder4OutTradeNo 商户订单号查询
 func QueryOrder4OutTradeNo(q QueryOrderReqDto, acc AccountV3) (string, map[string]string, error) {
 	var (
-		urlStr = fmt.Sprintf(PayDomainUrl + "/v3/pay/transactions/out-trade-no/%s?mchid=%s", *q.OutTradeNo, *q.Mchid)
+		urlStr = fmt.Sprintf("%s/v3/pay/transactions/out-trade-no/%s?mchid=%s", PayDomainUrl, *q.OutTradeNo, *q.Mchid)
 		respContent = ""
 		allHeaders = map[string]string{}
 	)
@@ -226,7 +226,7 @@ func QueryOrder4OutTradeNo(q QueryOrderReqDto, acc AccountV3) (string, map[strin
 // CloseOrder 关闭订单
 func CloseOrder(q CloseOrderReqDto, acc AccountV3) (bool, map[string]string, error) {
 	var (
-		urlStr = fmt.Sprintf(PayDomainUrl + "/v3/pay/transactions/out-trade-no/%s/close", *q.OutTradeNo)
+		urlStr = fmt.Sprintf("%s/v3/pay/transactions/out-trade-no/%s/close", PayDomainUrl, *q.OutTradeNo)
 		respContent = false
 		allHeaders = map[string]string{}
 	)
@@ -266,6 +266,83 @@ func CloseOrder(q CloseOrderReqDto, acc AccountV3) (bool, map[string]string, err
 	if resp.GetRaw().StatusCode >= 200 && resp.GetRaw().StatusCode <= 299 {
 		respContent = true
 	}
+	return respContent, allHeaders, nil
+
+}
+
+// RefundOrder 退款
+func RefundOrder(reqDto RefundReqV3Dto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = PayDomainUrl + "/v3/refund/domestic/refunds"
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	rawPostBodyData := gosupport.ToJson(reqDto)
+
+	reqStr := PinReqMessage(http.MethodPost, urlPath, timestamp, nonce, rawPostBodyData)
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).SetPostType("json").SetRawPostData(rawPostBodyData).Post()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}
+
+// RefundQuery 退款查询
+func RefundQuery(reqDto QueryByOutRefundNoReqV3Dto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = fmt.Sprintf("%s/v3/refund/domestic/refunds/%s", PayDomainUrl, *reqDto.OutRefundNo)
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	rawPostBodyData := ""
+
+	reqStr := PinReqMessage(http.MethodGet, urlPath, timestamp, nonce, rawPostBodyData)
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).Get()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+	respContent = resp.GetBody()
 	return respContent, allHeaders, nil
 
 }

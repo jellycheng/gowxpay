@@ -47,12 +47,13 @@ func TestJsapiPrepayV3(t *testing.T) {
 	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
 	apiClientKeyCertFile := payCfg["apiclient_cert_pem_file"]
 	openid := payCfg["openid"]
+	payNotifyUrl := payCfg["wxpay_notify_url"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiClientKeyCertFile}
 	prepayDto := PrepayReqV3Dto{Appid: String(appid),
 								Mchid: String(mchid),
 								Description: String("购买cjs商品"),
 								OutTradeNo: String("2021"+gosupport.GetRandString(10)), // 订单号
-								NotifyUrl: String("https://api.5ecms.com/baiyi/callback/wxpay"),
+								NotifyUrl: String(payNotifyUrl),
 								Amount: &AmountReqV3Dto{ // 订单金额
 									Currency: String(FeeTypeCNY),
 									Total:    Int64(100),
@@ -169,3 +170,155 @@ func TestCloseOrder(t *testing.T) {
 	}
 
 }
+
+
+// go test -run="TestQueryOrder4OutTradeNo"
+func TestQueryOrder4OutTradeNo(t *testing.T) {
+	// 通过商户订单号查询订单
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
+	reqDto := QueryOrderReqDto{
+		OutTradeNo: String("2021LC8u0n4qkV"),
+		Mchid:      String(mchid),
+	}
+	if payOrderInfo, allHeaders, err := QueryOrder4OutTradeNo(reqDto, accountV3Obj);err == nil{
+		fmt.Println(allHeaders)
+		fmt.Println("支付结果：", payOrderInfo)
+		payOrderInfoObj := new(QueryOrderRespDto)
+		JsonUnmarshal(payOrderInfo, payOrderInfoObj)
+		if payOrderInfoObj.Appid != nil && *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
+			// 支付成功
+			fmt.Println(fmt.Sprintf("%+v", payOrderInfoObj))
+		} else {
+			// 查询失败： {"code":"PARAM_ERROR","message":"微信订单号非法"}
+			fmt.Println("查询失败：", payOrderInfo)
+		}
+
+	} else {
+		fmt.Println(err.Error())
+	}
+}
+
+// go test -run="TestQueryOrder4TransactionId"
+func TestQueryOrder4TransactionId(t *testing.T) {
+	// 通过微信支付单号查询订单
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
+	reqDto := QueryOrderReqDto{
+		TransactionId: String("4200001341202112126654818876"),
+		Mchid:      String(mchid),
+	}
+	if payOrderInfo, allHeaders, err := QueryOrder4TransactionId(reqDto, accountV3Obj);err == nil{
+		fmt.Println(allHeaders)
+		fmt.Println("支付结果：", payOrderInfo)
+		payOrderInfoObj := new(QueryOrderRespDto)
+		if err2 := JsonUnmarshal(payOrderInfo, payOrderInfoObj);err2 == nil {
+			if payOrderInfoObj.Appid != nil && *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
+				// 支付成功
+				fmt.Println(fmt.Sprintf("%+v", payOrderInfoObj))
+			} else {
+				// 查询失败： {"code":"PARAM_ERROR","message":"微信订单号非法"}
+				fmt.Println("查询失败：", payOrderInfo)
+			}
+		} else {
+
+		}
+
+
+	} else {
+		fmt.Println(err.Error())
+	}
+}
+
+// go test -run="TestRefundOrder"
+func TestRefundOrder(t *testing.T) {
+	// 退款
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	refundNotifyUrl := payCfg["wxrefund_notify_url"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
+	outrefundNo := "2021refund_" + gosupport.GetRandString(10)
+	reqDto := RefundReqV3Dto{
+		TransactionId: String("4200001322202112137430682123"),
+		OutRefundNo:      String(outrefundNo), //商户退款单号
+		NotifyUrl: String(refundNotifyUrl), // 退款结果回调url
+		Amount: &RefundAmountReqV3Dto{
+			Refund: Int64(3), //3分
+			Total: Int64(10), //1角
+			Currency: String(FeeTypeCNY),
+		},
+	}
+	if refundOrderInfo, allHeaders, err := RefundOrder(reqDto, accountV3Obj);err == nil{
+		fmt.Println(allHeaders)
+		fmt.Println("退款结果：", refundOrderInfo)
+		refundOrderInfoObj := new(RefundRespV3Dto)
+		if err2 := JsonUnmarshal(refundOrderInfo, refundOrderInfoObj);err2 == nil {
+			if refundOrderInfoObj.RefundId != nil && gosupport.StrInSlice(*refundOrderInfoObj.Status,[]string{string(RefundStatusSuccess), string(RefundStatusProcessing)}) {
+				// 退款申请成功
+				fmt.Println(fmt.Sprintf("%+v", refundOrderInfoObj))
+			} else {
+				// 退款失败： {"code":"NOT_ENOUGH","message":"基本账户余额不足，请充值后重新发起"}
+				//  {"code":"INVALID_REQUEST","message":"订单已全额退款"}
+				//  {"code":"INVALID_REQUEST","message":"订单金额或退款金额与之前请求不一致，请核实后再试"}
+				fmt.Println("退款失败：", refundOrderInfo)
+			}
+		} else {
+
+		}
+
+
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}
+
+// go test -run="TestRefundQuery"
+func TestRefundQuery(t *testing.T) {
+	// 查询退款
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
+	reqDto := QueryByOutRefundNoReqV3Dto{
+		OutRefundNo: String("2021refund_f6QyyWlAQM"), //商户退款单号
+	}
+	if refundOrderInfo, allHeaders, err := RefundQuery(reqDto, accountV3Obj);err == nil{
+		fmt.Println(allHeaders)
+		fmt.Println("查询退款结果：", refundOrderInfo)
+		refundOrderInfoObj := new(RefundRespV3Dto)
+		if err2 := JsonUnmarshal(refundOrderInfo, refundOrderInfoObj);err2 == nil {
+			if refundOrderInfoObj.RefundId != nil && gosupport.StrInSlice(*refundOrderInfoObj.Status,[]string{string(RefundStatusSuccess), string(RefundStatusProcessing)}) {
+				// 退款申请成功
+				fmt.Println(fmt.Sprintf("%+v", refundOrderInfoObj))
+			} else {
+				// 退款查询失败：{"code":"RESOURCE_NOT_EXISTS","message":"退款单不存在"}
+				fmt.Println("退款查询失败：", refundOrderInfo)
+			}
+		} else {
+
+		}
+
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}
+

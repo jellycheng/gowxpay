@@ -24,4 +24,7 @@ apiclient_cert_pem_file=
 openid=
 
 # 通知地址、支付回调地址
-notify_url=http://pay.xxx.com/notify
+wxpay_notify_url=https://domain/callback/wxpay
+
+# 退款通知回调地址
+wxrefund_notify_url=https://domain/callback/wxrefund

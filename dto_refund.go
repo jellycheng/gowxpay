@@ -130,7 +130,7 @@ type RefundRespV3Dto struct {
 	OutRefundNo *string `json:"out_refund_no"`
 	// 微信支付交易订单号
 	TransactionId *string `json:"transaction_id"`
-	// 原支付交易对应的商户订单号
+	// 原支付交易对应的商户订单号，正向单号
 	OutTradeNo *string `json:"out_trade_no"`
 	// 退款渠道，ORIGINAL—原路退款，BALANCE—退回到余额，OTHER_BALANCE—原账户异常退到其他余额账户，OTHER_BANKCARD—原银行卡异常退到其他银行卡
 	Channel *string `json:"channel"`

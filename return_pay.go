@@ -2,10 +2,10 @@ package gowxpay
 
 import "github.com/jellycheng/gosupport"
 
-// 用于微信支付通知，响应微信支付服务的参数，使用V2接口通知响应
+// NotifiesReturnV2 用于微信支付通知，响应微信支付服务的参数，使用V2接口通知响应
 type NotifiesReturnV2 struct{}
 
-// 通知成功返回
+// OK 通知成功返回
 func (n *NotifiesReturnV2) OK() string {
 	var params = map[string]string {
 		"return_code":Success,
@@ -14,7 +14,7 @@ func (n *NotifiesReturnV2) OK() string {
 	return gosupport.Map2XMLV2(params)
 }
 
-// 通知处理失败返回-不成功
+// Fail 通知处理失败返回-不成功
 func (n *NotifiesReturnV2) Fail(errMsg string) string {
 	var params = map[string]string {
 		"return_code":Fail,
@@ -23,17 +23,16 @@ func (n *NotifiesReturnV2) Fail(errMsg string) string {
 	return gosupport.Map2XMLV2(params)
 }
 
-
-// 用于微信支付通知，响应微信支付服务的参数，使用V3接口通知响应
+// NotifiesReturnV3 用于微信支付通知，响应微信支付服务的参数，使用V3接口通知响应
 type NotifiesReturnV3 struct{}
 
-// 通知成功返回
+// OK 通知成功返回
 func (n *NotifiesReturnV3) OK() string {
 	var params = PayV3Err{Code: Success, Message: "成功"}
 	return gosupport.ToJson(params)
 }
 
-// 通知处理失败返回-不成功
+// Fail 通知处理失败返回-不成功
 func (n *NotifiesReturnV3) Fail(errMsg string) string {
 	var params = PayV3Err{Code: Fail, Message: errMsg}
 	return gosupport.ToJson(params)

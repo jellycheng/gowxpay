@@ -3,6 +3,7 @@ package gowxpay
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"encoding/pem"
 	"encoding/xml"
 	"errors"
@@ -16,7 +17,7 @@ import (
 	"strings"
 )
 
-// 将Pkcs12转成Pem
+// Pkcs12ToPem 将Pkcs12转成Pem
 func Pkcs12ToPem(p12 []byte, password string) (tls.Certificate,error) {
 	blocks, err := pkcs12.ToPEM(p12, password)
 
@@ -141,3 +142,8 @@ func SplitLine(s string, l int)  {
 	sl := strings.Repeat(s, l)
 	fmt.Println(sl)
 }
+
+func JsonUnmarshal(str string, obj interface{}) error  {
+	return json.Unmarshal([]byte(str), obj)
+}
+

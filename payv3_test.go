@@ -89,6 +89,7 @@ func TestJsapiPrepayV3(t *testing.T) {
 
 // go test -run="TestGetCertificatesV3"
 func TestGetCertificatesV3(t *testing.T) {
+	// 获取 -----BEGIN CERTIFICATE----- 内容
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
 	mchid := payCfg["mchid"] // 支付商户号
@@ -112,7 +113,7 @@ func TestGetCertificatesV3(t *testing.T) {
 		nonce := *certificatesRespDtoObj.Data[0].EncryptCertificate.Nonce
 		ciphertext := *certificatesRespDtoObj.Data[0].EncryptCertificate.Ciphertext
 		if certificateData,e := DecryptAES256GCM(apiv3key, associatedData, nonce, ciphertext);e== nil{
-			fmt.Println(certificateData)
+			fmt.Println(certificateData) // 返回类似-----BEGIN CERTIFICATE-----这样的内容
 			if certificateObj, err := LoadCertificate(certificateData);err == nil{
 				// 验证签名
 				if er:= CheckSignV3(allHeaders, []byte(res), certificateObj);er==nil{
@@ -140,8 +141,10 @@ func TestNotifiesReturnV3(t *testing.T)  {
 
 // go test -run="TestGetCertificateSerialNumber"
 func TestGetCertificateSerialNumber(t *testing.T) {
+	payCfg := SimpleIni2Map("cjs.ini")
+	apiclientCertPemFile := payCfg["apiclient_cert_pem_file"]
 	// 从证书中获取序列号
-	if payCertificate, err := LoadCertificateWithPath("./apiclient_cert.pem");err == nil {
+	if payCertificate, err := LoadCertificateWithPath(apiclientCertPemFile);err == nil {
 		s := GetCertificateSerialNumber(*payCertificate)
 		fmt.Println(s)
 	}
@@ -322,3 +325,45 @@ func TestRefundQuery(t *testing.T) {
 
 }
 
+
+// go test -run="TestRefundNotifyParse"
+func TestRefundNotifyParse(t *testing.T) {
+	// 退款通知解析
+	allHeaders := map[string]string{
+		"Content-Type":        "application/json",
+		"Wechatpay-Nonce":     "IcWDN8T6pbXxeaFrFLnmHth821K4l3bd",
+		"Wechatpay-Timestamp": "1639390118",
+		"Wechatpay-Serial":    "5CDB363A77BE5818B8F12462C36ED5A2892AEC36",
+		"Wechatpay-Signature": "bZIXhayq+SxEG87+wao0W5CvgatDHdcXH5/BK10NCoyG401IdSPtj/T4T/XrFvgXvKwDGyQ1aJLUacVIXL5MpsyTiJOpHQhVel45ejMG60qLWCnfzClE0cT2ukbwpx+8RXJB3+rOwjvN5tqn+4j/7RUiOWSvzZl/WrJuhRHhcX4CF5WnO4a0m/V19VORKVFowId/9ehQGHskVejGheF60nNFALUPCFpSrR3gAhAiZAv8g2JCQtyUcau3wcHlmjnndGAi67GK5+q2dDNMsBOqKBu072R3HiR4mu76DJmhr/E9R/NLpBnleqw4C/9KAF/oT+AJNR40oweqhHVo+Wr5rQ==",
+	}
+
+	postBody := `{
+    "id":"d43e5b9b-d253-5983-9933-061c53f23022",
+    "create_time":"2021-12-13T18:08:31+08:00",
+    "resource_type":"encrypt-resource",
+    "event_type":"REFUND.SUCCESS",
+    "summary":"退款成功",
+    "resource":{
+        "original_type":"refund",
+        "algorithm":"AEAD_AES_256_GCM",
+        "ciphertext":"vqnhU3Jv9zxSuzFmsVUAnsGG4IYBMirDg5U6A9AVZ+zNEU/E+QeLdlpm/uKzf+TxLR1uqI6nDetUQwcAdcbVshwJd7kLF7FVIKm4qnC8gE4AIeMfDnDwzjfJeA65bxZ6ojvLyGmeSPTaahi+YPGOj/to5sxwL5bkEG5C9dO3TUlyCOeyyDhyH2ceKfmC8RguSQ/dZgmXFsONOlJqN5aQMdydpWXX0If2j8aoFhXfPuBmCfB7F/zQRFCdYzaKxVLAFpKW/kOg03uD396IINeBIFCUHrapiCdgKDcFORRuQXT0oHsnML/T5GvQKeZfrV3u1gtaM8dBHwGxGFTtnnDcLAe0RlVxOK6g+yHGNPb/VYf8s33q56IgAizXGUdqVGOMMz2Tc/McoV1Ukje7VrvumCA7MKQPRtMRX+5+EJDTV/O1MfW1pylcJI4RDKJWB04efVqxoWX9nC9jcMBLRYwAnCp7LcdvllaVc6hT/mFQrtakfuvvJ2NuG15XIr95QOA=",
+        "associated_data":"refund",
+        "nonce":"fAKcOVTdU4VI"
+    }
+}`
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiclientCertPemFile := ""//payCfg["apiclient_cert_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiclientCertPemFile,ApiV3Key: apiv3key}
+
+	if notifyDto, err := RefundNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
+		fmt.Println(fmt.Sprintf("%+v", notifyDto))
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}

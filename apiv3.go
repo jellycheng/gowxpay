@@ -1,6 +1,8 @@
 package gowxpay
 
 import (
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"github.com/jellycheng/gosupport"
 	"github.com/jellycheng/gosupport/curl"
@@ -346,3 +348,55 @@ func RefundQuery(reqDto QueryByOutRefundNoReqV3Dto, acc AccountV3) (string, map[
 	return respContent, allHeaders, nil
 
 }
+
+func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV3) (RefundNotifyDto, error)  {
+	var (
+		notifyDto = new(RefundNotifyDto)
+		certificateObj *x509.Certificate
+		err error
+	)
+	if gosupport.FileExists(acc.ApiClientKeyCertFile) {
+		certificateObj, err = LoadCertificateWithPath(acc.ApiClientKeyCertFile);
+	} else {
+		if res, _, err2 := GetCertificatesV3(acc);err2 == nil {
+			var certificatesRespDtoObj = new(CertificatesRespDto)
+			JsonUnmarshal(res, certificatesRespDtoObj)
+			associatedData:=*certificatesRespDtoObj.Data[0].EncryptCertificate.AssociatedData
+			nonce := *certificatesRespDtoObj.Data[0].EncryptCertificate.Nonce
+			ciphertext := *certificatesRespDtoObj.Data[0].EncryptCertificate.Ciphertext
+			if certificateData,e := DecryptAES256GCM(acc.ApiV3Key, associatedData, nonce, ciphertext);e== nil{
+				certificateObj, err = LoadCertificate(certificateData)
+				if err != nil {
+					return *notifyDto, errors.New("下载证书内容错误")
+				}
+				// 缓存证书，写文件，todo
+			} else {
+				return *notifyDto, fmt.Errorf("证书下载失败:%s", e.Error())
+			}
+		}
+	}
+
+	if err == nil {
+		// 验证签名
+		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);er==nil{
+			// 解密内容
+			apiv3key := acc.ApiV3Key
+			JsonUnmarshal(parseBody, notifyDto)
+			associatedData:= notifyDto.Resource.AssociatedData
+			nonce := notifyDto.Resource.Nonce
+			ciphertext := notifyDto.Resource.Ciphertext
+			if resourceData,e := DecryptAES256GCM(apiv3key, associatedData, nonce, ciphertext);e== nil{
+				notifyDto.Resource.Plaintext = resourceData
+				return *notifyDto, nil
+			} else {
+				return *notifyDto, errors.New("通知内容解析失败")
+			}
+		} else {
+			return *notifyDto, fmt.Errorf("签名失败：%s", er.Error())
+		}
+	} else {
+		return *notifyDto, errors.New("证书错误")
+	}
+
+}
+

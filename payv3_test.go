@@ -260,7 +260,7 @@ func TestRefundOrder(t *testing.T) {
 		OutRefundNo:      String(outrefundNo), //商户退款单号
 		NotifyUrl: String(refundNotifyUrl), // 退款结果回调url
 		Amount: &RefundAmountReqV3Dto{
-			Refund: Int64(3), //3分
+			Refund: Int64(1), //1分
 			Total: Int64(10), //1角
 			Currency: String(FeeTypeCNY),
 		},
@@ -362,6 +362,74 @@ func TestRefundNotifyParse(t *testing.T) {
 
 	if notifyDto, err := RefundNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
 		fmt.Println(fmt.Sprintf("%+v", notifyDto))
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}
+
+// go test -run="TestRefundNotifyResourceDto"
+func TestRefundNotifyResourceDto(t *testing.T) {
+	str := `{
+    "mchid":"1604928906",
+    "out_trade_no":"20216oBoepskSO",
+    "transaction_id":"4200001322202112137430682123",
+    "out_refund_no":"2021refund_f6QyyWlAQM",
+    "refund_id":"503011002020211213153447",
+    "refund_status":"SUCCESS",
+    "success_time":"2021-12-13T18:08:31+08:00",
+    "amount":{
+        "total":10,
+        "refund":3,
+        "payer_total":10,
+        "payer_refund":3
+    },
+    "user_received_account":"支付用户零钱"
+}`
+	obj := new(RefundNotifyResourceDto)
+	JsonUnmarshal(str, obj)
+	fmt.Println(fmt.Sprintf("%+v", obj))
+	fmt.Println(fmt.Sprintf("amount: %+v", *obj.Amount))
+	fmt.Println((*obj.SuccessTime).Format("2006-01-02 15:04:05"))
+
+}
+
+// go test -run="TestPayNotifyParse"
+func TestPayNotifyParse(t *testing.T) {
+	// 正常支付通知内容解析
+	allHeaders := map[string]string{
+		"Content-Type":        "application/json",
+		"Wechatpay-Nonce":     "j9VYUQwmBfTi8rQovzVa62gN99jV8rYS",
+		"Wechatpay-Timestamp": "1639301204",
+		"Wechatpay-Serial":    "5CDB363A77BE5818B8F12462C36ED5A2892AEC36",
+		"Wechatpay-Signature": "BW9KUJ5cokSEHr0Mym6KxPoV508ny1X+PqrW7bmRkNxe2ikGXE13qbmk5KX92sSh8OQ2OT+WnlVaWQfrZg7QrNb8kaayZpBAtKcn2AkSmJaILImgqEBs1ZQmi2rQpSVasZ5SwPtNczQ1ZfPBuT/pCcwxxSq0CoVylB174SlrQeQclZ61P1CT9RXVc2oEjpU94cnj/RAryKkG4t+43rhpoJvwrqxX8lREw3lqqtqzQ/wclRBY8N0QpoEhhzL/2O87trnP9OVLaQEOlqrkW8x8QjRO6G9s29DdVHgy2eIO1tZFKtvWCcFsny++9U5qReMdCbT/TBhGlW7VndBpZ4pbrg==",
+	}
+
+	postBody := `{
+    "id":"87ff2da3-a165-5c79-b225-cfc1ec2ea7b6",
+    "create_time":"2021-12-12T17:26:44+08:00",
+    "resource_type":"encrypt-resource",
+    "event_type":"TRANSACTION.SUCCESS",
+    "summary":"支付成功",
+    "resource":{
+        "original_type":"transaction",
+        "algorithm":"AEAD_AES_256_GCM",
+        "ciphertext":"rM2bn6vS9def2ydrAv21DbMGj8XNC+LwrmBQfCGlHL+KBpJpRm94pKHYDl3Ega638QxbGsesFFH2isZPk0HdLii1yLF9v8trIEMJyQ6AacYXKvXvIqTNBUSFx9zKPaQ9rGxLSVkrCx0Ii4MCRoQt7JsrgU3BT1v6AW6Y4eEF0WzcoKXyJDuKhI6Zwwxl4KJwpuUNOtdPW6wTHGLjpI/CX/Hi7RfEI4tmrfoE6hJxmuL+krfH2mB8Enlu4QbW4ukfnvPXazSR+A9lf+EFtQe1CPPjKHlGVOaojUBKMutX8Q3i7QikR5iajWLJlDiZ2lT/JvqhAD8be6lRu4v92ryT4s+sLYf1l8CuzSO/56Jef/l06+PZ5PmMSsL5xYQvimf4FA9TVxvbVGa7Jvuu+mfGXlKcSqWYJcY778TwabCKn+fU+EDNNaLPYlwTh7q6jwTp+aXH/GJ+efPlrU25H5hUFoctxVXVm/RV1pfj4M5h+zTVVI+SZeJUYoBqVa5D7HU/4o/w2TUbJ6Cd094pr+AXxbkW4zkTIWrP5/DUH7HzgocMqE4yubBJ9HI3aIdv",
+        "associated_data":"transaction",
+        "nonce":"aJUWDm2xmnaD"
+    }
+}`
+	payCfg := SimpleIni2Map("cjs.ini")
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"] // 支付商户号
+	serialNo := payCfg["serialno"] // 证书序列号
+	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
+	apiclientCertPemFile := "" //payCfg["apiclient_cert_pem_file"]
+	apiv3key := payCfg["apiv3key"]
+	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiclientCertPemFile,ApiV3Key: apiv3key}
+
+	if notifyDto, err := PayNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
+		fmt.Println(fmt.Sprintf("%#v", notifyDto))
 	} else {
 		fmt.Println(err.Error())
 	}

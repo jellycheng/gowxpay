@@ -49,17 +49,17 @@ func TestJsapiPrepayV3(t *testing.T) {
 	openid := payCfg["openid"]
 	payNotifyUrl := payCfg["wxpay_notify_url"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiClientKeyCertFile}
-	prepayDto := PrepayReqV3Dto{Appid: String(appid),
-								Mchid: String(mchid),
-								Description: String("购买cjs商品"),
-								OutTradeNo: String("2021"+gosupport.GetRandString(10)), // 订单号
-								NotifyUrl: String(payNotifyUrl),
+	prepayDto := PrepayReqV3Dto{Appid: StringPtr(appid),
+								Mchid: StringPtr(mchid),
+								Description: StringPtr("购买cjs商品"),
+								OutTradeNo: StringPtr("2021"+gosupport.GetRandString(10)), // 订单号
+								NotifyUrl: StringPtr(payNotifyUrl),
 								Amount: &AmountReqV3Dto{ // 订单金额
-									Currency: String(FeeTypeCNY),
-									Total:    Int64(100),
+									Currency: StringPtr(FeeTypeCNY),
+									Total:    Int64Ptr(100),
 								},
 								Payer: &PayerReqV3Dto{
-									Openid: String(openid),
+									Openid: StringPtr(openid),
 								},
 				}
 	if res, allHeaders, err := JsapiPrepayV3(prepayDto, accountV3Obj);err == nil {
@@ -162,8 +162,8 @@ func TestCloseOrder(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := CloseOrderReqDto{
-		OutTradeNo: String("OutTradeNo_example123"),
-		Mchid:      String(mchid),
+		OutTradeNo: StringPtr("OutTradeNo_example123"),
+		Mchid:      StringPtr(mchid),
 	}
 	if isOk, allHeaders, err := CloseOrder(reqDto, accountV3Obj);err == nil{
 		fmt.Println(allHeaders)
@@ -186,17 +186,25 @@ func TestQueryOrder4OutTradeNo(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryOrderReqDto{
-		OutTradeNo: String("2021LC8u0n4qkV"),
-		Mchid:      String(mchid),
+		OutTradeNo: StringPtr("2021LC8u0n4qkV"),
+		Mchid:      StringPtr(mchid),
 	}
 	if payOrderInfo, allHeaders, err := QueryOrder4OutTradeNo(reqDto, accountV3Obj);err == nil{
 		fmt.Println(allHeaders)
 		fmt.Println("支付结果：", payOrderInfo)
 		payOrderInfoObj := new(QueryOrderRespDto)
 		JsonUnmarshal(payOrderInfo, payOrderInfoObj)
-		if payOrderInfoObj.Appid != nil && *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
-			// 支付成功
-			fmt.Println(fmt.Sprintf("%+v", payOrderInfoObj))
+		if payOrderInfoObj.Appid != nil {
+			if *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
+				// 支付成功
+				fmt.Println(fmt.Sprintf("支付成功:%+v", payOrderInfoObj))
+			} else if *payOrderInfoObj.TradeState == string(TradeStateRefund) {
+				// 发生退款
+				fmt.Println(fmt.Sprintf("发生退款: %+v", payOrderInfoObj))
+			} else {
+				fmt.Println(fmt.Sprintf("其它状态: %+v", payOrderInfoObj))
+			}
+
 		} else {
 			// 查询失败： {"code":"PARAM_ERROR","message":"微信订单号非法"}
 			fmt.Println("查询失败：", payOrderInfo)
@@ -218,17 +226,24 @@ func TestQueryOrder4TransactionId(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryOrderReqDto{
-		TransactionId: String("4200001341202112126654818876"),
-		Mchid:      String(mchid),
+		TransactionId: StringPtr("4200001341202112126654818876"),
+		Mchid:      StringPtr(mchid),
 	}
 	if payOrderInfo, allHeaders, err := QueryOrder4TransactionId(reqDto, accountV3Obj);err == nil{
 		fmt.Println(allHeaders)
 		fmt.Println("支付结果：", payOrderInfo)
 		payOrderInfoObj := new(QueryOrderRespDto)
 		if err2 := JsonUnmarshal(payOrderInfo, payOrderInfoObj);err2 == nil {
-			if payOrderInfoObj.Appid != nil && *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
-				// 支付成功
-				fmt.Println(fmt.Sprintf("%+v", payOrderInfoObj))
+			if payOrderInfoObj.Appid != nil {
+				if *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
+					// 支付成功
+					fmt.Println(fmt.Sprintf("支付成功:%+v", payOrderInfoObj))
+				} else if *payOrderInfoObj.TradeState == string(TradeStateRefund) {
+					// 发生退款
+					fmt.Println(fmt.Sprintf("发生退款: %+v", payOrderInfoObj))
+				} else {
+					fmt.Println(fmt.Sprintf("其它状态: %+v", payOrderInfoObj))
+				}
 			} else {
 				// 查询失败： {"code":"PARAM_ERROR","message":"微信订单号非法"}
 				fmt.Println("查询失败：", payOrderInfo)
@@ -256,13 +271,13 @@ func TestRefundOrder(t *testing.T) {
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	outrefundNo := "2021refund_" + gosupport.GetRandString(10)
 	reqDto := RefundReqV3Dto{
-		TransactionId: String("4200001322202112137430682123"),
-		OutRefundNo:      String(outrefundNo), //商户退款单号
-		NotifyUrl: String(refundNotifyUrl), // 退款结果回调url
+		TransactionId: StringPtr("4200001322202112137430682123"),
+		OutRefundNo:      StringPtr(outrefundNo), //商户退款单号
+		NotifyUrl: StringPtr(refundNotifyUrl), // 退款结果回调url
 		Amount: &RefundAmountReqV3Dto{
-			Refund: Int64(1), //1分
-			Total: Int64(10), //1角
-			Currency: String(FeeTypeCNY),
+			Refund: Int64Ptr(1), //1分
+			Total: Int64Ptr(10), //1角
+			Currency: StringPtr(FeeTypeCNY),
 		},
 	}
 	if refundOrderInfo, allHeaders, err := RefundOrder(reqDto, accountV3Obj);err == nil{
@@ -301,7 +316,7 @@ func TestRefundQuery(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryByOutRefundNoReqV3Dto{
-		OutRefundNo: String("2021refund_f6QyyWlAQM"), //商户退款单号
+		OutRefundNo: StringPtr("2021refund_f6QyyWlAQM"), //商户退款单号
 	}
 	if refundOrderInfo, allHeaders, err := RefundQuery(reqDto, accountV3Obj);err == nil{
 		fmt.Println(allHeaders)

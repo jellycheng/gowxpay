@@ -100,3 +100,18 @@ const (
 	PromotionTypeCoupon   PromotionType = "COUPON" //代金券类型，需要走结算资金的充值型代金券
 	PromotionTypeDiscount PromotionType = "DISCOUNT" //优惠券类型，不走结算资金的免充值型优惠券
 )
+
+// EventType 通知类型
+type EventType string
+
+func (m EventType) Ptr() *EventType {
+	return &m
+}
+
+const (
+	EventTypeTransactionSucc = "TRANSACTION.SUCCESS" // 正向，支付成功通知
+	EventTypeRefundSucc = "REFUND.SUCCESS" //退款成功通知
+	EventTypeRefundAbnormal = "REFUND.ABNORMAL" //退款异常通知
+	EventTypeRefundClosed = "REFUND.CLOSED" //退款关闭通知
+)
+

@@ -350,12 +350,17 @@ func RefundQuery(reqDto QueryByOutRefundNoReqV3Dto, acc AccountV3) (string, map[
 }
 
 // RefundNotifyParse 退款通知内容解析
-func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV3) (RefundNotifyDto, error)  {
+func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV3, isSkipSign ...bool) (RefundNotifyDto, error)  {
 	var (
 		notifyDto = new(RefundNotifyDto)
 		certificateObj *x509.Certificate
 		err error
+		skipSign = false
 	)
+	if len(isSkipSign)>0 {
+		skipSign = isSkipSign[0]
+	}
+
 	if gosupport.FileExists(acc.ApiClientKeyCertFile) {
 		certificateObj, err = LoadCertificateWithPath(acc.ApiClientKeyCertFile);
 	} else {
@@ -379,7 +384,7 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 
 	if err == nil {
 		// 验证签名
-		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);er==nil{
+		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
 			JsonUnmarshal(parseBody, notifyDto)
@@ -402,12 +407,17 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 }
 
 // PayNotifyParse 正向支付通知内容解析
-func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV3) (NotifyDto, error)  {
+func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV3, isSkipSign ...bool) (NotifyDto, error)  {
 	var (
 		notifyDto = new(NotifyDto)
 		certificateObj *x509.Certificate
 		err error
+		skipSign = false
 	)
+	if len(isSkipSign)>0 {
+		skipSign = isSkipSign[0]
+	}
+
 	if gosupport.FileExists(acc.ApiClientKeyCertFile) {
 		certificateObj, err = LoadCertificateWithPath(acc.ApiClientKeyCertFile);
 	} else {
@@ -431,7 +441,7 @@ func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV
 
 	if err == nil {
 		// 验证签名
-		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);er==nil {
+		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
 			JsonUnmarshal(parseBody, notifyDto)

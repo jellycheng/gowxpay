@@ -443,7 +443,7 @@ func TestPayNotifyParse(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiclientCertPemFile,ApiV3Key: apiv3key}
 
-	if notifyDto, err := PayNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
+	if notifyDto, err := PayNotifyParse(postBody, allHeaders, accountV3Obj,true);err == nil {
 		fmt.Println(fmt.Sprintf("%#v", notifyDto))
 	} else {
 		fmt.Println(err.Error())

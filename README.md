@@ -67,6 +67,7 @@ H5支付：在移动浏览器中的支付
         小程序后台-》功能-》微信支付
 
 ```
+[支付场景与用途说明：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/terms_definition/chapter1_1_0.shtml](https://pay.weixin.qq.com/wiki/doc/apiv3_partner/terms_definition/chapter1_1_0.shtml) <br>
 
 ## 密钥相关
 ```

@@ -68,7 +68,7 @@ func TestJsapiPrepayV3(t *testing.T) {
 		fmt.Println(res)
 
 		var prepayRespDtoObj = PrepayRespV3Dto{}
-		json.Unmarshal([]byte(res), &prepayRespDtoObj)
+		_ = json.Unmarshal([]byte(res), &prepayRespDtoObj)
 		fmt.Println(*prepayRespDtoObj.PrepayId)
 		// 验证签名
 		if payCertificate, err := LoadCertificateWithPath(accountV3Obj.ApiClientKeyCertFile);err == nil {
@@ -105,7 +105,7 @@ func TestGetCertificatesV3(t *testing.T) {
 			SplitLine("-", 18)
 
 		var certificatesRespDtoObj = new(CertificatesRespDto)
-		json.Unmarshal([]byte(res), certificatesRespDtoObj)
+		_ = json.Unmarshal([]byte(res), certificatesRespDtoObj)
 		fmt.Printf("%#v \r\n", certificatesRespDtoObj)
 		SplitLine("-", 18)
 		// 解析
@@ -193,7 +193,7 @@ func TestQueryOrder4OutTradeNo(t *testing.T) {
 		fmt.Println(allHeaders)
 		fmt.Println("支付结果：", payOrderInfo)
 		payOrderInfoObj := new(QueryOrderRespDto)
-		JsonUnmarshal(payOrderInfo, payOrderInfoObj)
+		_ = JsonUnmarshal(payOrderInfo, payOrderInfoObj)
 		if payOrderInfoObj.Appid != nil {
 			if *payOrderInfoObj.TradeState == string(TradeStateSuccess) {
 				// 支付成功
@@ -402,7 +402,7 @@ func TestRefundNotifyResourceDto(t *testing.T) {
     "user_received_account":"支付用户零钱"
 }`
 	obj := new(RefundNotifyResourceDto)
-	JsonUnmarshal(str, obj)
+	_ = JsonUnmarshal(str, obj)
 	fmt.Println(fmt.Sprintf("%+v", obj))
 	fmt.Println(fmt.Sprintf("amount: %+v", *obj.Amount))
 	fmt.Println((*obj.SuccessTime).Format("2006-01-02 15:04:05"))

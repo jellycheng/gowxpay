@@ -2,7 +2,7 @@ package gowxpay
 
 import "io/ioutil"
 
-// Account 支付商户号，appid和mch_id两者之间需要具备绑定关系，直连模式：appid和mch_id之间的绑定关系可以是多对多
+// Account 支付商户号,微信支付v2版本的商户信息，appid和mch_id两者之间需要具备绑定关系，直连模式：appid和mch_id之间的绑定关系可以是多对多
 type Account struct {
 	appID     string //小程序appid
 	mchID     string //支付商户号

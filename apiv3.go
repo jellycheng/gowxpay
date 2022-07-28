@@ -107,7 +107,7 @@ func GetWechatPayHeaderV3(allheaders map[string]string) (WechatPayHeader, error)
 	getHeaderInt64 := func(key string) (int64, error) {
 		val, err := getHeaderString(key)
 		if err != nil {
-			return 0, nil
+			return 0, err
 		}
 		ret, err := strconv.ParseInt(val, 10, 64)
 		if err != nil {
@@ -366,7 +366,7 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 	} else {
 		if res, _, err2 := GetCertificatesV3(acc);err2 == nil {
 			var certificatesRespDtoObj = new(CertificatesRespDto)
-			JsonUnmarshal(res, certificatesRespDtoObj)
+			_ = JsonUnmarshal(res, certificatesRespDtoObj)
 			associatedData:=*certificatesRespDtoObj.Data[0].EncryptCertificate.AssociatedData
 			nonce := *certificatesRespDtoObj.Data[0].EncryptCertificate.Nonce
 			ciphertext := *certificatesRespDtoObj.Data[0].EncryptCertificate.Ciphertext
@@ -387,7 +387,7 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
-			JsonUnmarshal(parseBody, notifyDto)
+			_ = JsonUnmarshal(parseBody, notifyDto)
 			associatedData:= notifyDto.Resource.AssociatedData
 			nonce := notifyDto.Resource.Nonce
 			ciphertext := notifyDto.Resource.Ciphertext
@@ -423,7 +423,7 @@ func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV
 	} else {
 		if res, _, err2 := GetCertificatesV3(acc);err2 == nil {
 			var certificatesRespDtoObj = new(CertificatesRespDto)
-			JsonUnmarshal(res, certificatesRespDtoObj)
+			_ = JsonUnmarshal(res, certificatesRespDtoObj)
 			associatedData:=*certificatesRespDtoObj.Data[0].EncryptCertificate.AssociatedData
 			nonce := *certificatesRespDtoObj.Data[0].EncryptCertificate.Nonce
 			ciphertext := *certificatesRespDtoObj.Data[0].EncryptCertificate.Ciphertext
@@ -444,7 +444,7 @@ func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV
 		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
-			JsonUnmarshal(parseBody, notifyDto)
+			_ = JsonUnmarshal(parseBody, notifyDto)
 			associatedData:= notifyDto.Resource.AssociatedData
 			nonce := notifyDto.Resource.Nonce
 			ciphertext := notifyDto.Resource.Ciphertext

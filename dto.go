@@ -134,6 +134,15 @@ type StoreInfoReqV3Dto struct {
 	Address *string `json:"address,omitempty"`
 }
 
+// H5InfoReqV3Dto H5场景信息
+type H5InfoReqV3Dto struct {
+	Type string `json:"type"` //场景类型
+	AppName string `json:"app_name,omitempty"` //应用名称
+	AppUrl string `json:"app_url,omitempty"` //网站URL
+	BundleId string `json:"bundle_id,omitempty"` //iOS平台BundleID
+	PackageName string `json:"package_name,omitempty"` //Android平台PackageName
+}
+
 // SceneInfoReqV3Dto 支付场景描述,入参
 type SceneInfoReqV3Dto struct {
 	// 用户终端IP
@@ -141,6 +150,7 @@ type SceneInfoReqV3Dto struct {
 	// 商户端设备号
 	DeviceId  *string    `json:"device_id,omitempty"`
 	StoreInfo *StoreInfoReqV3Dto `json:"store_info,omitempty"`
+	H5Info *H5InfoReqV3Dto `json:"h5_info,omitempty"`
 }
 
 // SceneInfoRespV3Dto 支付场景描述,出参
@@ -176,7 +186,7 @@ type PrepayReqV3Dto struct {
 	// 订单金额信息
 	Amount        *AmountReqV3Dto   `json:"amount"`
 	// 支付者信息
-	Payer         *PayerReqV3Dto   `json:"payer"`
+	Payer         *PayerReqV3Dto   `json:"payer,omitempty"`
 	// 优惠功能
 	Detail        *DetailReqV3Dto     `json:"detail,omitempty"`
 	// 场景信息

@@ -55,6 +55,84 @@ func JsapiPrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string
 	return respContent, allHeaders, nil
 }
 
+// NativePrepayV3 native下单
+func NativePrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = PayDomainUrl + "/v3/pay/transactions/native"
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	rawPostBodyData := gosupport.ToJson(dto)
+	reqStr := PinReqMessage(http.MethodPost, urlPath, timestamp, nonce, rawPostBodyData)
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).SetPostType("json").SetRawPostData(rawPostBodyData).Post()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+
+	// 返回结果
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}
+
+// H5PrepayV3 h5下单
+func H5PrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = PayDomainUrl + "/v3/pay/transactions/h5"
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	rawPostBodyData := gosupport.ToJson(dto)
+	reqStr := PinReqMessage(http.MethodPost, urlPath, timestamp, nonce, rawPostBodyData)
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).SetPostType("json").SetRawPostData(rawPostBodyData).Post()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+
+	// 返回结果
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}
+
 // GetCertificatesV3 获取平台证书列表: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay5_1.shtml
 func GetCertificatesV3(acc AccountV3)(string, map[string]string, error) {
 	var (

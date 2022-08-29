@@ -38,3 +38,6 @@ const (
 	FiveMinute     = 5 * 60           // 回包校验最长时间（秒）
 	DefaultTimeout = 30 * time.Second // HTTP请求默认超时时间
 )
+
+// 关闭校验时间，true关闭，false不关闭
+var CloseCheckTime bool = false

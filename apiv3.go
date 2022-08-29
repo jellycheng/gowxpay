@@ -16,7 +16,7 @@ import (
 
 //封装v3版本接口
 
-// JsapiPrepayV3 jsapi下单-小程序下单
+// JsapiPrepayV3 jsapi下单（公众号中拉起支付）和小程序下单
 func JsapiPrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
 	var (
 		urlStr = PayDomainUrl + "/v3/pay/transactions/jsapi"
@@ -55,7 +55,7 @@ func JsapiPrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string
 	return respContent, allHeaders, nil
 }
 
-// NativePrepayV3 native下单
+// NativePrepayV3 native下单（用户扫码支付，即生成二维码提供用户扫码支付,一般用于扫pc网站二维码支付、收银台二维码场景）
 func NativePrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
 	var (
 		urlStr = PayDomainUrl + "/v3/pay/transactions/native"
@@ -98,6 +98,45 @@ func NativePrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]strin
 func H5PrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
 	var (
 		urlStr = PayDomainUrl + "/v3/pay/transactions/h5"
+		respContent = ""
+		allHeaders = map[string]string{}
+	)
+	varUrl,_ := url.Parse(urlStr)
+	urlPath := varUrl.RequestURI()
+	timestamp := gosupport.Time()
+	nonce := gosupport.GetRandString(8)
+
+	rawPostBodyData := gosupport.ToJson(dto)
+	reqStr := PinReqMessage(http.MethodPost, urlPath, timestamp, nonce, rawPostBodyData)
+	privateKey, err := LoadPrivateKeyWithPath(acc.ApiClientKeyPemFile)
+	if err != nil {
+		return respContent, allHeaders, err
+	}
+	sign, _ := SignSHA256WithRSA(reqStr, privateKey)
+	authorizationHeader := PinAuthorizationHeaderVal(acc.MchID, nonce, timestamp, acc.SerialNo, sign)
+
+	headers := map[string]string{
+		"Accept": "*/*",
+		"User-Agent": gosupport.GenerateUserAgent(PaySdkName, PaySdkVersion),
+		"Authorization": authorizationHeader,
+	}
+	reqObj := curl.NewHttpRequest()
+	resp, err := reqObj.SetUrl(urlStr).SetTimeout(int64(DefaultTimeout)).SetHeaders(headers).SetPostType("json").SetRawPostData(rawPostBodyData).Post()
+	if err != nil{
+		return respContent, allHeaders, err
+	}
+	// 获取响应头
+	allHeaders = resp.GetHeaders()
+
+	// 返回结果
+	respContent = resp.GetBody()
+	return respContent, allHeaders, nil
+}
+
+// AppPrepayV3 app下单
+func AppPrepayV3(dto PrepayReqV3Dto, acc AccountV3) (string, map[string]string, error) {
+	var (
+		urlStr = PayDomainUrl + "/v3/pay/transactions/app"
 		respContent = ""
 		allHeaders = map[string]string{}
 	)
@@ -221,7 +260,7 @@ func GetWechatPayHeaderV3(allheaders map[string]string) (WechatPayHeader, error)
 
 // CheckWechatPayHeader 检查请求头的Timestamp 与当前时间之差不得超过 FiveMinute
 func CheckWechatPayHeader(args WechatPayHeader) error {
-	if math.Abs(float64(time.Now().Unix()-args.Timestamp)) >= FiveMinute {
+	if CloseCheckTime == false && math.Abs(float64(time.Now().Unix()-args.Timestamp)) >= FiveMinute {
 		return fmt.Errorf("timestamp=[%d] expires, Request-Id=[%s]", args.Timestamp, args.RequestID)
 	}
 	return nil
@@ -439,7 +478,7 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 		skipSign = isSkipSign[0]
 	}
 
-	if gosupport.FileExists(acc.ApiClientKeyCertFile) {
+	if acc.ApiClientKeyCertFile!="" && gosupport.FileExists(acc.ApiClientKeyCertFile) {
 		certificateObj, err = LoadCertificateWithPath(acc.ApiClientKeyCertFile);
 	} else {
 		if res, _, err2 := GetCertificatesV3(acc);err2 == nil {
@@ -462,7 +501,7 @@ func RefundNotifyParse(parseBody string, allHeaders map[string]string, acc Accou
 
 	if err == nil {
 		// 验证签名
-		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
+		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj); er==nil || skipSign == true {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
 			_ = JsonUnmarshal(parseBody, notifyDto)
@@ -496,7 +535,7 @@ func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV
 		skipSign = isSkipSign[0]
 	}
 
-	if gosupport.FileExists(acc.ApiClientKeyCertFile) {
+	if acc.ApiClientKeyCertFile!="" && gosupport.FileExists(acc.ApiClientKeyCertFile) {
 		certificateObj, err = LoadCertificateWithPath(acc.ApiClientKeyCertFile);
 	} else {
 		if res, _, err2 := GetCertificatesV3(acc);err2 == nil {
@@ -519,7 +558,7 @@ func PayNotifyParse(parseBody string, allHeaders map[string]string, acc AccountV
 
 	if err == nil {
 		// 验证签名
-		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj);(er==nil || skipSign == true) {
+		if er:= CheckSignV3(allHeaders, []byte(parseBody), certificateObj); er==nil || skipSign == true {
 			// 解密内容
 			apiv3key := acc.ApiV3Key
 			_ = JsonUnmarshal(parseBody, notifyDto)

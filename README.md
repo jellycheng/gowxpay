@@ -2,14 +2,18 @@
 ```
 封装微信支付api sdk
 
-V2文档：
+直连商户V2接口文档：
     https://pay.weixin.qq.com/wiki/doc/api/index.html
-
-V3文档：
+服务商V2接口文档：
+    https://pay.weixin.qq.com/wiki/doc/api/sl.html
+    
+直连商户V3文档：
     https://pay.weixin.qq.com/wiki/doc/apiv3/index.shtml
     https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/index.shtml
+服务商V3接口文档：
+    https://pay.weixin.qq.com/wiki/doc/apiv3_partner/index.shtml
 
-名词表：
+名词表：接入模式、支付产品、参数等说明
     https://pay.weixin.qq.com/wiki/doc/apiv3_partner/terms_definition/chapter1_1.shtml
 
 ```
@@ -19,7 +23,7 @@ V3文档：
 ## 下载与更新依赖
 ```
 go get -u github.com/jellycheng/gowxpay
-或者
+    或者
 GO111MODULE=on GOPROXY=https://goproxy.cn/,direct go get -u github.com/jellycheng/gowxpay
 
 ```

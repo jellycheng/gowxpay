@@ -2,7 +2,7 @@ package gowxpay
 
 import "time"
 
-type PayV3Err struct {
+type PayV3Dto struct {
 	Code string `json:"code"`
 	Message string `json:"message"`
 }
@@ -165,7 +165,7 @@ type SettleInfoReqV3Dto struct {
 	ProfitSharing *bool `json:"profit_sharing,omitempty"`
 }
 
-// PrepayReqV3Dto 预下单请求参数
+// PrepayReqV3Dto 预下单请求参数,适配JSAPI、App、H5、Native、小程序等下单
 type PrepayReqV3Dto struct {
 	// 公众号ID、小程序ID
 	Appid *string `json:"appid"`

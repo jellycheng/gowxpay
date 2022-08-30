@@ -28,13 +28,13 @@ type NotifiesReturnV3 struct{}
 
 // OK 通知成功返回
 func (n *NotifiesReturnV3) OK() string {
-	var params = PayV3Err{Code: Success, Message: "成功"}
+	var params = PayV3Dto{Code: Success, Message: "成功"}
 	return gosupport.ToJson(params)
 }
 
 // Fail 通知处理失败返回-不成功
 func (n *NotifiesReturnV3) Fail(errMsg string) string {
-	var params = PayV3Err{Code: Fail, Message: errMsg}
+	var params = PayV3Dto{Code: Fail, Message: errMsg}
 	return gosupport.ToJson(params)
 }
 

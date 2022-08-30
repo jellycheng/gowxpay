@@ -113,7 +113,7 @@ func TestGetCertificatesV3(t *testing.T) {
 		nonce := *certificatesRespDtoObj.Data[0].EncryptCertificate.Nonce
 		ciphertext := *certificatesRespDtoObj.Data[0].EncryptCertificate.Ciphertext
 		if certificateData,e := DecryptAES256GCM(apiv3key, associatedData, nonce, ciphertext);e== nil{
-			fmt.Println(certificateData) // 返回类似-----BEGIN CERTIFICATE-----这样的内容
+			fmt.Println(certificateData) //打印apiclient_cert.pem文件内容 返回类似-----BEGIN CERTIFICATE-----这样的内容
 			if certificateObj, err := LoadCertificate(certificateData);err == nil{
 				// 验证签名
 				if er:= CheckSignV3(allHeaders, []byte(res), certificateObj);er==nil{
@@ -134,16 +134,15 @@ func TestGetCertificatesV3(t *testing.T) {
 // 响应通知结果： go test -run="TestNotifiesReturnV3"
 func TestNotifiesReturnV3(t *testing.T)  {
 	notify := NotifiesReturnV3{}
-	fmt.Println(notify.OK())
-
-	fmt.Println(notify.Fail("处理失败"))
+	fmt.Println("成功示例：", notify.OK())
+	fmt.Println("失败示例：", notify.Fail("处理失败"))
 }
 
 // go test -run="TestGetCertificateSerialNumber"
 func TestGetCertificateSerialNumber(t *testing.T) {
 	payCfg := SimpleIni2Map("cjs.ini")
 	apiclientCertPemFile := payCfg["apiclient_cert_pem_file"]
-	// 从证书中获取序列号
+	// 从apiclient_cert.pem证书中获取序列号
 	if payCertificate, err := LoadCertificateWithPath(apiclientCertPemFile);err == nil {
 		s := GetCertificateSerialNumber(*payCertificate)
 		fmt.Println(s)
@@ -260,7 +259,7 @@ func TestQueryOrder4TransactionId(t *testing.T) {
 
 // go test -run="TestRefundOrder"
 func TestRefundOrder(t *testing.T) {
-	// 退款
+	// 申请退款
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
 	mchid := payCfg["mchid"] // 支付商户号
@@ -371,10 +370,15 @@ func TestRefundNotifyParse(t *testing.T) {
 	mchid := payCfg["mchid"] // 支付商户号
 	serialNo := payCfg["serialno"] // 证书序列号
 	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
-	apiclientCertPemFile := ""//payCfg["apiclient_cert_pem_file"]
+	apiclientCertPemFile := "" //payCfg["apiclient_cert_pem_file"]
 	apiv3key := payCfg["apiv3key"]
-	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiclientCertPemFile,ApiV3Key: apiv3key}
-
+	accountV3Obj := AccountV3{AppID:appid,
+							MchID: mchid,
+							SerialNo: serialNo,
+							ApiClientKeyPemFile: apiclientKeyPemFile,
+							ApiClientKeyCertFile: apiclientCertPemFile,
+							ApiV3Key: apiv3key}
+	CloseCheckTime = true // 关闭校验时间
 	if notifyDto, err := RefundNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
 		fmt.Println(fmt.Sprintf("%+v", notifyDto))
 	} else {

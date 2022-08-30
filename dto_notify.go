@@ -11,7 +11,7 @@ type EncryptedResourceDto struct {
 	AssociatedData string `json:"associated_data"` //附加数据
 	OriginalType   string `json:"original_type"` //原始类型
 	Nonce          string `json:"nonce"` //随机串
-	Plaintext      string // 解密后内容,正向
+	Plaintext      string // 解密后内容,正向，对应 QueryOrderRespDto
 }
 
 // NotifyDto 微信支付通知结果结构,正向
@@ -31,7 +31,7 @@ type RefundEncryptedResourceDto struct {
 	AssociatedData string `json:"associated_data"` //附加数据，refund
 	OriginalType   string `json:"original_type"` //原始类型，refund
 	Nonce          string `json:"nonce"` //随机串
-	Plaintext      string // 解密后内容
+	Plaintext      string // 解密后内容，对应 RefundNotifyResourceDto
 }
 
 // RefundNotifyDto 微信退款通知结果结构

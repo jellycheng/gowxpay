@@ -28,3 +28,15 @@ wxpay_notify_url=https://domain/callback/wxpay
 
 # 退款通知回调地址
 wxrefund_notify_url=https://domain/callback/wxrefund
+
+# 付款码，规则 ^1[0-6][0-9]{16}$
+auth_code_demo=
+
+# 微信单号
+transaction_id_demo=4200001613202208309423469364
+# 我的单号
+out_trade_no_demo=soeSm9lg
+
+# 我的退单号
+out_refund_no_demo=2021refund_ExUZGGrrDd
+

@@ -48,28 +48,32 @@ func TestJsapiPrepayV3(t *testing.T) {
 	apiClientKeyCertFile := payCfg["apiclient_cert_pem_file"]
 	openid := payCfg["openid"]
 	payNotifyUrl := payCfg["wxpay_notify_url"]
-	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiClientKeyCertFile}
+	accountV3Obj := AccountV3{AppID:appid,
+							 MchID: mchid,
+							 SerialNo: serialNo,
+							 ApiClientKeyPemFile: apiclientKeyPemFile,
+							 ApiClientKeyCertFile: apiClientKeyCertFile}
 	prepayDto := PrepayReqV3Dto{Appid: StringPtr(appid),
 								Mchid: StringPtr(mchid),
-								Description: StringPtr("购买cjs商品"),
-								OutTradeNo: StringPtr("2021"+gosupport.GetRandString(10)), // 订单号
-								NotifyUrl: StringPtr(payNotifyUrl),
+								Description: StringPtr("购买商品"),
+								OutTradeNo: StringPtr("2021"+gosupport.GetRandString(10)), // 我的订单号，唯一
+								NotifyUrl: StringPtr(payNotifyUrl), // 通知地址
 								Amount: &AmountReqV3Dto{ // 订单金额
 									Currency: StringPtr(FeeTypeCNY),
-									Total:    Int64Ptr(100),
+									Total:    Int64Ptr(1), //订单金额，单位分
 								},
 								Payer: &PayerReqV3Dto{
 									Openid: StringPtr(openid),
 								},
 				}
 	if res, allHeaders, err := JsapiPrepayV3(prepayDto, accountV3Obj);err == nil {
-		fmt.Println("单号：", *prepayDto.OutTradeNo)
+		fmt.Println("我的单号：", *prepayDto.OutTradeNo)
 		fmt.Println(gosupport.ToJson(allHeaders))
 		fmt.Println(res)
 
 		var prepayRespDtoObj = PrepayRespV3Dto{}
 		_ = json.Unmarshal([]byte(res), &prepayRespDtoObj)
-		fmt.Println(*prepayRespDtoObj.PrepayId)
+		fmt.Println("prepay_id", *prepayRespDtoObj.PrepayId)
 		// 验证签名
 		if payCertificate, err := LoadCertificateWithPath(accountV3Obj.ApiClientKeyCertFile);err == nil {
 			if er:= CheckSignV3(allHeaders, []byte(res), payCertificate);er==nil{
@@ -185,7 +189,7 @@ func TestQueryOrder4OutTradeNo(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryOrderReqDto{
-		OutTradeNo: StringPtr("2021LC8u0n4qkV"),
+		OutTradeNo: StringPtr(payCfg["out_trade_no_demo"]),
 		Mchid:      StringPtr(mchid),
 	}
 	if payOrderInfo, allHeaders, err := QueryOrder4OutTradeNo(reqDto, accountV3Obj);err == nil{
@@ -225,7 +229,7 @@ func TestQueryOrder4TransactionId(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryOrderReqDto{
-		TransactionId: StringPtr("4200001341202112126654818876"),
+		TransactionId: StringPtr(payCfg["transaction_id_demo"]),
 		Mchid:      StringPtr(mchid),
 	}
 	if payOrderInfo, allHeaders, err := QueryOrder4TransactionId(reqDto, accountV3Obj);err == nil{
@@ -270,12 +274,12 @@ func TestRefundOrder(t *testing.T) {
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	outrefundNo := "2021refund_" + gosupport.GetRandString(10)
 	reqDto := RefundReqV3Dto{
-		TransactionId: StringPtr("4200001322202112137430682123"),
+		TransactionId: StringPtr(payCfg["transaction_id_demo"]),
 		OutRefundNo:      StringPtr(outrefundNo), //商户退款单号
 		NotifyUrl: StringPtr(refundNotifyUrl), // 退款结果回调url
 		Amount: &RefundAmountReqV3Dto{
-			Refund: Int64Ptr(1), //1分
-			Total: Int64Ptr(10), //1角
+			Refund: Int64Ptr(1), //本次退款金额，单位分
+			Total: Int64Ptr(1), //总金额，单位分
 			Currency: StringPtr(FeeTypeCNY),
 		},
 	}
@@ -315,7 +319,7 @@ func TestRefundQuery(t *testing.T) {
 	apiv3key := payCfg["apiv3key"]
 	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiV3Key: apiv3key}
 	reqDto := QueryByOutRefundNoReqV3Dto{
-		OutRefundNo: StringPtr("2021refund_f6QyyWlAQM"), //商户退款单号
+		OutRefundNo: StringPtr(payCfg["out_refund_no_demo"]), //商户退款单号
 	}
 	if refundOrderInfo, allHeaders, err := RefundQuery(reqDto, accountV3Obj);err == nil{
 		fmt.Println(allHeaders)
@@ -346,25 +350,27 @@ func TestRefundNotifyParse(t *testing.T) {
 	allHeaders := map[string]string{
 		"Content-Type":        "application/json",
 		"Wechatpay-Nonce":     "IcWDN8T6pbXxeaFrFLnmHth821K4l3bd",
-		"Wechatpay-Timestamp": "1639390118",
-		"Wechatpay-Serial":    "5CDB363A77BE5818B8F12462C36ED5A2892AEC36",
-		"Wechatpay-Signature": "bZIXhayq+SxEG87+wao0W5CvgatDHdcXH5/BK10NCoyG401IdSPtj/T4T/XrFvgXvKwDGyQ1aJLUacVIXL5MpsyTiJOpHQhVel45ejMG60qLWCnfzClE0cT2ukbwpx+8RXJB3+rOwjvN5tqn+4j/7RUiOWSvzZl/WrJuhRHhcX4CF5WnO4a0m/V19VORKVFowId/9ehQGHskVejGheF60nNFALUPCFpSrR3gAhAiZAv8g2JCQtyUcau3wcHlmjnndGAi67GK5+q2dDNMsBOqKBu072R3HiR4mu76DJmhr/E9R/NLpBnleqw4C/9KAF/oT+AJNR40oweqhHVo+Wr5rQ==",
+		"Wechatpay-Timestamp": "1661832052",
+		"Wechatpay-Serial":    "2B08154B9E99549F56A2B71EB5F22BD5907F7C52",
+		"Wechatpay-Signature": "签名结果",
 	}
 
-	postBody := `{
-    "id":"d43e5b9b-d253-5983-9933-061c53f23022",
-    "create_time":"2021-12-13T18:08:31+08:00",
-    "resource_type":"encrypt-resource",
-    "event_type":"REFUND.SUCCESS",
-    "summary":"退款成功",
-    "resource":{
-        "original_type":"refund",
-        "algorithm":"AEAD_AES_256_GCM",
-        "ciphertext":"vqnhU3Jv9zxSuzFmsVUAnsGG4IYBMirDg5U6A9AVZ+zNEU/E+QeLdlpm/uKzf+TxLR1uqI6nDetUQwcAdcbVshwJd7kLF7FVIKm4qnC8gE4AIeMfDnDwzjfJeA65bxZ6ojvLyGmeSPTaahi+YPGOj/to5sxwL5bkEG5C9dO3TUlyCOeyyDhyH2ceKfmC8RguSQ/dZgmXFsONOlJqN5aQMdydpWXX0If2j8aoFhXfPuBmCfB7F/zQRFCdYzaKxVLAFpKW/kOg03uD396IINeBIFCUHrapiCdgKDcFORRuQXT0oHsnML/T5GvQKeZfrV3u1gtaM8dBHwGxGFTtnnDcLAe0RlVxOK6g+yHGNPb/VYf8s33q56IgAizXGUdqVGOMMz2Tc/McoV1Ukje7VrvumCA7MKQPRtMRX+5+EJDTV/O1MfW1pylcJI4RDKJWB04efVqxoWX9nC9jcMBLRYwAnCp7LcdvllaVc6hT/mFQrtakfuvvJ2NuG15XIr95QOA=",
-        "associated_data":"refund",
-        "nonce":"fAKcOVTdU4VI"
-    }
-}`
+	postBody := `
+{
+	"id": "a9a0bc6d-20e3-52ab-88b5-c3ca88db149f",
+	"create_time": "2022-08-30T12:00:46+08:00",
+	"resource_type": "encrypt-resource",
+	"event_type": "REFUND.SUCCESS",
+	"summary": "退款成功",
+	"resource": {
+		"original_type": "refund",
+		"algorithm": "AEAD_AES_256_GCM",
+		"ciphertext": "Z4+/KUuETT9Q0PnIXyZVDv07uQfiNLlH7d7wkG+J16ScaiA8MxCxKXvswlVye+PDg5xWF0OdYPNSBS5nIBfAlOSiugGJVjZyck0Eka/NDhbqdEcd2rQGKCqoFqRapF6kCwdIjhCmFD2JBtZCahTnzVHZzYTiAA7k9kc1LVPgZRh4gbOysjJsPGRygZEn766AEfowE71/kwJkEMqYRKLPW8hy39/1d2p+wLpOXMePeVxofAUkbTnc7yOQTgOjR3iR20Mja6yPDuP11biSOa5Y8Noe3VM6lMFzmGxSPiZbyFO3fyUaxc+Q1dSSF5fcF9vi2qiejzE0Upir33l4BnwxxEuLtH7uM1sh0WebrzH3H+C3yN+R+FivWkxM7loZKMRFjlrQZtoy+QajghM6tjyleBXgzahDFNuAZlqVf74+m2H0I7bMu8R4OtwFcBv1T6s/yIIR0XjnB/4kOJeZ+SZRhv5DwJyVnHP6ZDmkAj2dU56kItcTX5yG",
+		"associated_data": "refund",
+		"nonce": "PeIVqUnoKOlc"
+	}
+}
+`
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
 	mchid := payCfg["mchid"] // 支付商户号
@@ -379,8 +385,15 @@ func TestRefundNotifyParse(t *testing.T) {
 							ApiClientKeyCertFile: apiclientCertPemFile,
 							ApiV3Key: apiv3key}
 	CloseCheckTime = true // 关闭校验时间
-	if notifyDto, err := RefundNotifyParse(postBody, allHeaders, accountV3Obj);err == nil {
+	isSkipSign := true //跳过签名验证
+	if notifyDto, err := RefundNotifyParse(postBody, allHeaders, accountV3Obj, isSkipSign);err == nil {
 		fmt.Println(fmt.Sprintf("%+v", notifyDto))
+		// {"mchid":"1628039785","out_trade_no":"soUFMywj","transaction_id":"4200067664202208302723736693","out_refund_no":"2021refund_ExUZGGrrDd","refund_id":"50302302932022083024350423805","refund_status":"SUCCESS","success_time":"2022-08-30T12:00:46+08:00","amount":{"total":1,"refund":1,"payer_total":1,"payer_refund":1},"user_received_account":"支付用户零钱"}
+		fmt.Println(notifyDto.Resource.Plaintext)
+		obj := new(RefundNotifyResourceDto)
+		_ = JsonUnmarshal(notifyDto.Resource.Plaintext, obj)
+		fmt.Println(fmt.Sprintf("%+v", obj))
+
 	} else {
 		fmt.Println(err.Error())
 	}
@@ -421,7 +434,7 @@ func TestPayNotifyParse(t *testing.T) {
 		"Wechatpay-Nonce":     "j9VYUQwmBfTi8rQovzVa62gN99jV8rYS",
 		"Wechatpay-Timestamp": "1639301204",
 		"Wechatpay-Serial":    "5CDB363A77BE5818B8F12462C36ED5A2892AEC36",
-		"Wechatpay-Signature": "BW9KUJ5cokSEHr0Mym6KxPoV508ny1X+PqrW7bmRkNxe2ikGXE13qbmk5KX92sSh8OQ2OT+WnlVaWQfrZg7QrNb8kaayZpBAtKcn2AkSmJaILImgqEBs1ZQmi2rQpSVasZ5SwPtNczQ1ZfPBuT/pCcwxxSq0CoVylB174SlrQeQclZ61P1CT9RXVc2oEjpU94cnj/RAryKkG4t+43rhpoJvwrqxX8lREw3lqqtqzQ/wclRBY8N0QpoEhhzL/2O87trnP9OVLaQEOlqrkW8x8QjRO6G9s29DdVHgy2eIO1tZFKtvWCcFsny++9U5qReMdCbT/TBhGlW7VndBpZ4pbrg==",
+		"Wechatpay-Signature": "签名结果",
 	}
 
 	postBody := `{
@@ -438,6 +451,7 @@ func TestPayNotifyParse(t *testing.T) {
         "nonce":"aJUWDm2xmnaD"
     }
 }`
+
 	payCfg := SimpleIni2Map("cjs.ini")
 	appid := payCfg["appid"]
 	mchid := payCfg["mchid"] // 支付商户号
@@ -445,9 +459,16 @@ func TestPayNotifyParse(t *testing.T) {
 	apiclientKeyPemFile := payCfg["apiclient_key_pem_file"]
 	apiclientCertPemFile := "" //payCfg["apiclient_cert_pem_file"]
 	apiv3key := payCfg["apiv3key"]
-	accountV3Obj := AccountV3{AppID:appid, MchID: mchid, SerialNo: serialNo,ApiClientKeyPemFile: apiclientKeyPemFile,ApiClientKeyCertFile: apiclientCertPemFile,ApiV3Key: apiv3key}
+	accountV3Obj := AccountV3{AppID:appid,
+							MchID: mchid,
+							SerialNo: serialNo,
+							ApiClientKeyPemFile: apiclientKeyPemFile,
+							ApiClientKeyCertFile: apiclientCertPemFile,
+							ApiV3Key: apiv3key}
 
-	if notifyDto, err := PayNotifyParse(postBody, allHeaders, accountV3Obj,true);err == nil {
+	CloseCheckTime = true // 关闭校验时间
+	isSkipSign := true //跳过签名验证
+	if notifyDto, err := PayNotifyParse(postBody, allHeaders, accountV3Obj,isSkipSign);err == nil {
 		fmt.Println(fmt.Sprintf("%#v", notifyDto))
 	} else {
 		fmt.Println(err.Error())

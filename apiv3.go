@@ -389,7 +389,7 @@ func CloseOrder(q CloseOrderReqDto, acc AccountV3) (bool, map[string]string, err
 
 }
 
-// RefundOrder 退款
+// RefundOrder 申请退款
 func RefundOrder(reqDto RefundReqV3Dto, acc AccountV3) (string, map[string]string, error) {
 	var (
 		urlStr = PayDomainUrl + "/v3/refund/domestic/refunds"

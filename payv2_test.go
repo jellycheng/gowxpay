@@ -38,7 +38,7 @@ func TestUnifiedOrder(t *testing.T) {
 	mchid := payCfg["mchid"]
 	apikey := payCfg["apikey"]
 	openid := payCfg["openid"]
-	notifyUrl := payCfg["notify_url"]
+	notifyUrl := payCfg["wxpay_notify_url"]
 	client := NewPayClient(NewAccount(appid, mchid, apikey))
 	params := make(MapParams)
 	params.SetString("body", "购买商品").
@@ -69,3 +69,34 @@ func TestUnifiedOrder(t *testing.T) {
 
 }
 
+
+// 付款码支付 go test -run=TestMicropayV2
+func TestMicropayV2(t *testing.T) {
+	payCfg := SimpleIni2Map("cjs.ini")
+	//fmt.Println(payCfg)
+	appid := payCfg["appid"]
+	mchid := payCfg["mchid"]
+	apikey := payCfg["apikey"]
+	auth_code_demo := payCfg["auth_code_demo"]
+	client := NewPayClient(NewAccount(appid, mchid, apikey))
+	params := make(MapParams)
+	params.SetString("body", "购买商品").
+		SetString("out_trade_no", "so" + gosupport.GetRandString(6)). //商户订单号
+		SetInt64("total_fee", 1). //订单金额
+		SetString("spbill_create_ip", "127.0.0.1"). //终端IP
+		SetString("auth_code", auth_code_demo) // 付款码
+	if res, err := MicropayV2(*client, params);err == nil{
+		fmt.Println(res) //result_code:FAIL return_code:SUCCESS return_msg:OK sign:27B6D2411B8AC994CC15A50333E39E36]
+		if res["return_code"] == "SUCCESS" && res["result_code"] == "SUCCESS" { //付款成功
+			fmt.Println(fmt.Sprintf("付款成功:微信单号%s", res["transaction_id"]))
+		} else {
+			fmt.Println("付款失败")
+			if res["err_code"] == "USERPAYING" {
+				fmt.Println("需要用户输入支付密码,此时再等待5秒，通过out_trade_no查询订单支付结果")
+			}
+		}
+	} else {
+		fmt.Println(err.Error())
+	}
+
+}

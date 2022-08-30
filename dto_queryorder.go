@@ -7,7 +7,7 @@ type QueryOrderReqDto struct {
 	OutTradeNo    *string // 商户订单号
 }
 
-// QueryOrderRespDto 查询订单返回结果
+// QueryOrderRespDto 查询订单返回结果，正向通知resource解析后存入Plaintext的结果
 type QueryOrderRespDto struct {
 	Appid           *string            `json:"appid,omitempty"` //应用appid
 	Mchid           *string            `json:"mchid,omitempty"` //商户ID

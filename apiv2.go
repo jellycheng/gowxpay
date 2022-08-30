@@ -22,7 +22,7 @@ func OrderQueryV2(c PayClient, params MapParams) (MapParams, error) {
 	return c.ProcessResponseXml(xmlStr)
 }
 
-// RefundV2 退款
+// RefundV2 申请退款
 func RefundV2(c PayClient, params MapParams) (MapParams, error) {
 	var urlStr = PayDomainUrl + "/secapi/pay/refund"
 	xmlStr, err := c.Post4Cert(urlStr, params)
@@ -42,4 +42,12 @@ func RefundQueryV2(c PayClient, params MapParams) (MapParams, error) {
 	return c.ProcessResponseXml(xmlStr)
 }
 
-
+// MicropayV2 付款码支付
+func MicropayV2(c PayClient, params MapParams) (MapParams, error) {
+	var urlStr = PayDomainUrl + "/pay/micropay"
+	xmlStr, err := c.Post4NotCert(urlStr, params)
+	if err != nil {
+		return nil, err
+	}
+	return c.ProcessResponseXml(xmlStr)
+}
